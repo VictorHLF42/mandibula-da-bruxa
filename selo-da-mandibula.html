@@ -9,25 +9,23 @@
   <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0a0a0c;
+      --bg: #030304; /* Fundo void quase absoluto */
       --bone: #d4c5b0;
-      --bone-dim: #8a7d6b;
-      --iron: #332f2c;
-      --iron-light: #594f46;
-      --liquid: #1a0826; /* Roxo ultra escuro */
-      --miasma: #7a1599; 
-      --miasma-light: #dfb2ff;
-      --success: #4db8ff;
-      --danger: #ff3333;
+      --bone-dim: #70675a; /* Rótulos inativos mais apagados para contraste */
+      --iron: #332d28; 
+      --iron-light: #524840;
+      --liquid: #080110; /* Preto-roxo denso */
+      --miasma: #9c27b0; /* Roxo neon brilhante */
+      --miasma-light: #f3e5f5; /* Rótulo ativo quase branco-roxo */
+      --success: #00d2ff; /* Ciano/azul neon */
+      --danger: #ff0055; /* Vermelho/magenta neon */
       --font-title: 'UnifrakturMaguntia', serif;
       --font-ui: 'Share Tech Mono', 'Courier New', monospace;
     }
 
-    /* PERFORMANCE FIX: Fundo simplificado. 
-       Filtros fractais em SVG destroem o framerate de tablets! */
     body {
       background-color: var(--bg);
-      background-image: radial-gradient(circle at 50% 50%, #17141a 0%, var(--bg) 80%);
+      background-image: radial-gradient(circle at 50% 50%, #0d0617 0%, var(--bg) 75%);
       color: var(--bone);
       font-family: var(--font-ui);
       text-align: center;
@@ -48,7 +46,7 @@
       font-size: 2.5rem;
       margin: 0;
       color: var(--bone);
-      text-shadow: 0 0 10px rgba(212, 197, 176, 0.3);
+      text-shadow: 0 0 15px rgba(212, 197, 176, 0.4);
     }
     
     .system-log {
@@ -84,39 +82,55 @@
       height: 100%;
     }
 
-    /* PERFORMANCE FIX: Removido os SVG drop-shadows dos tubos */
     .tube-base {
-      stroke: #11100f;
+      stroke: #1c1815;
       stroke-width: 32px;
       stroke-linecap: round;
     }
 
     .tube-groove {
-      stroke: #020202;
+      stroke: #08060a;
       stroke-width: 14px;
       stroke-linecap: round;
     }
 
-    .tube-liquid {
-      stroke: var(--liquid);
-      stroke-width: 10px;
+    /* SISTEMA DE DUPLA CAMADA PARA OS TUBOS (Miolo preto-roxo + brilho nas bordas) */
+    .tube-liquid-glow {
+      stroke: var(--miasma);
+      stroke-width: 12px;
       stroke-linecap: round;
       stroke-dasharray: 1500;
       stroke-dashoffset: 1500;
       transition: stroke-dashoffset 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
-    .tube-liquid.filled {
+    .tube-liquid-core {
+      stroke: var(--liquid);
+      stroke-width: 6px;
+      stroke-linecap: round;
+      stroke-dasharray: 1500;
+      stroke-dashoffset: 1500;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.04s;
+    }
+
+    .tube-liquid-glow.filled, .tube-liquid-core.filled {
       stroke-dashoffset: 0;
     }
 
-    .tube-liquid.boil {
-      animation: boilTube 0.25s infinite alternate !important;
+    .tube-liquid-glow.boil {
+      animation: boilGlow 0.2s infinite alternate !important;
+    }
+    .tube-liquid-core.boil {
+      animation: boilCore 0.2s infinite alternate !important;
     }
 
-    @keyframes boilTube {
-      0% { stroke: #050505; }
-      100% { stroke: var(--miasma); }
+    @keyframes boilGlow {
+      0% { stroke: var(--miasma); }
+      100% { stroke: #d946ef; }
+    }
+    @keyframes boilCore {
+      0% { stroke: var(--liquid); }
+      100% { stroke: #310a54; }
     }
 
     #labels-container {
@@ -162,7 +176,7 @@
       width: 400px;
       height: 400px;
       border-radius: 50%;
-      background: radial-gradient(circle at center, #11100f, #0a0a0c);
+      background: radial-gradient(circle at center, #0f0c12, #040306);
       box-shadow: inset 0 0 30px #000, 0 0 0 8px var(--iron), 0 0 25px 10px #000;
     }
 
@@ -174,7 +188,7 @@
     
     .gear-base {
       fill: none;
-      stroke: #030303;
+      stroke: #0a080c;
       stroke-width: 8;
     }
 
@@ -186,22 +200,40 @@
       transition: stroke-dashoffset 0.5s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
-    .liquid-layer {
+    /* SISTEMA DE DUPLA CAMADA PARA OS ANÉIS (Miolo preto-roxo + brilho nas bordas) */
+    .liquid-glow {
       fill: none;
-      stroke: var(--liquid);
-      stroke-width: 8;
+      stroke: var(--miasma);
+      stroke-width: 10px;
       stroke-linecap: round;
       stroke-dasharray: var(--circ);
       stroke-dashoffset: var(--circ);
       transition: stroke-dashoffset 0.6s ease-out;
     }
 
-    .liquid-layer.filled {
+    .liquid-core {
+      fill: none;
+      stroke: var(--liquid);
+      stroke-width: 4px;
+      stroke-linecap: round;
+      stroke-dasharray: var(--circ);
+      stroke-dashoffset: var(--circ);
+      transition: stroke-dashoffset 0.6s ease-out 0.04s;
+    }
+
+    .liquid-glow.filled, .liquid-core.filled {
       stroke-dashoffset: 0;
     }
 
+    .liquid-glow.boil {
+      animation: boilGlow 0.2s infinite alternate !important;
+    }
+    .liquid-core.boil {
+      animation: boilCore 0.2s infinite alternate !important;
+    }
+
     .flow-line {
-      stroke: var(--liquid);
+      stroke: var(--miasma);
       stroke-width: 6;
       stroke-linecap: round;
       stroke-dasharray: 180;
@@ -272,7 +304,7 @@
       cursor: grab;
       transform: rotate(0deg);
       transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-      touch-action: none; /* Crucial para o drag no tablet funcionar */
+      touch-action: none;
     }
 
     .knob-dial:active {
@@ -359,7 +391,7 @@
 
     @keyframes etherealPulse {
       0%, 100% { background-color: var(--bg); }
-      50% { background-color: #0b1c29; }
+      50% { background-color: #0b1a29; }
     }
     .ethereal-pulse {
       animation: etherealPulse 3s ease-in-out infinite;
@@ -401,11 +433,11 @@
     }
     #modal-box.success {
       border-color: var(--success);
-      box-shadow: 0 0 30px rgba(77, 184, 255, 0.2);
+      box-shadow: 0 0 30px rgba(0, 210, 255, 0.2);
     }
     #modal-box.danger {
       border-color: var(--danger);
-      box-shadow: 0 0 30px rgba(255, 51, 51, 0.2);
+      box-shadow: 0 0 30px rgba(255, 0, 85, 0.2);
     }
     #modal-title {
       font-family: var(--font-title);
@@ -482,17 +514,22 @@
         <circle cx="200" cy="200" r="55" class="slosh" />
       </g>
 
+      <!-- DUPLA CAMADA: liquid-glow (brilho) + liquid-core (fluido escuro no meio) -->
       <g class="ring-fill" id="ring-group-0">
-        <circle cx="200" cy="200" r="55" class="liquid-layer" style="--circ: 346;" />
+        <circle cx="200" cy="200" r="55" class="liquid-glow" style="--circ: 346;" />
+        <circle cx="200" cy="200" r="55" class="liquid-core" style="--circ: 346;" />
       </g>
       <g class="ring-fill" id="ring-group-1">
-        <circle cx="200" cy="200" r="90" class="liquid-layer" style="--circ: 566;" />
+        <circle cx="200" cy="200" r="90" class="liquid-glow" style="--circ: 566;" />
+        <circle cx="200" cy="200" r="90" class="liquid-core" style="--circ: 566;" />
       </g>
       <g class="ring-fill" id="ring-group-2">
-        <circle cx="200" cy="200" r="125" class="liquid-layer" style="--circ: 786;" />
+        <circle cx="200" cy="200" r="125" class="liquid-glow" style="--circ: 786;" />
+        <circle cx="200" cy="200" r="125" class="liquid-core" style="--circ: 786;" />
       </g>
       <g class="ring-fill" id="ring-group-3">
-        <circle cx="200" cy="200" r="160" class="liquid-layer" style="--circ: 1006;" />
+        <circle cx="200" cy="200" r="160" class="liquid-glow" style="--circ: 1006;" />
+        <circle cx="200" cy="200" r="160" class="liquid-core" style="--circ: 1006;" />
       </g>
 
       <g id="flow-rotator">
@@ -583,17 +620,26 @@
         innerLine.setAttribute("y2", y2);
         innerLine.setAttribute("class", "tube-groove");
         
-        let liquidLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        liquidLine.setAttribute("x1", 1000);
-        liquidLine.setAttribute("y1", 1000);
-        liquidLine.setAttribute("x2", x2);
-        liquidLine.setAttribute("y2", y2);
-        liquidLine.setAttribute("class", "tube-liquid");
-        liquidLine.setAttribute("id", `tube-liquid-${i}`);
+        let liquidGlow = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        liquidGlow.setAttribute("x1", 1000);
+        liquidGlow.setAttribute("y1", 1000);
+        liquidGlow.setAttribute("x2", x2);
+        liquidGlow.setAttribute("y2", y2);
+        liquidGlow.setAttribute("class", "tube-liquid-glow");
+        liquidGlow.setAttribute("id", `tube-liquid-glow-${i}`);
+
+        let liquidCore = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        liquidCore.setAttribute("x1", 1000);
+        liquidCore.setAttribute("y1", 1000);
+        liquidCore.setAttribute("x2", x2);
+        liquidCore.setAttribute("y2", y2);
+        liquidCore.setAttribute("class", "tube-liquid-core");
+        liquidCore.setAttribute("id", `tube-liquid-core-${i}`);
         
         tubesGroup.appendChild(outerLine);
         tubesGroup.appendChild(innerLine);
-        tubesGroup.appendChild(liquidLine);
+        tubesGroup.appendChild(liquidGlow);
+        tubesGroup.appendChild(liquidCore);
       }
 
       updateNeedle();
@@ -613,17 +659,14 @@
         let centerX = rect.left + rect.width / 2;
         let centerY = rect.top + rect.height / 2;
         
-        // Calcula o ângulo em radianos baseando-se no clique e no centro do botão
         let angleRad = Math.atan2(clientY - centerY, clientX - centerX);
-        let angleDeg = angleRad * (180 / Math.PI) + 90; // O topo vira 0 graus
+        let angleDeg = angleRad * (180 / Math.PI) + 90; 
         if (angleDeg < 0) angleDeg += 360;
         
-        // Encontra o ponto de encaixe de 45 graus mais próximo (0 a 7)
         let step = Math.round(angleDeg / 45) % 8;
         
         if (step !== stepIndex) {
           let diff = step - stepIndex;
-          // Usa o caminho mais curto
           if (diff < -4) diff += 8;
           if (diff > 4) diff -= 8;
           
@@ -641,7 +684,6 @@
       window.addEventListener('mousemove', (e) => { if(isDraggingKnob) handleEvent(e); });
       window.addEventListener('mouseup', () => { isDraggingKnob = false; });
       
-      // Touch events nativos para o Tablet (com preventDefault para evitar rolagem da tela ao girar)
       knob.addEventListener('touchstart', (e) => { isDraggingKnob = true; handleEvent(e); }, {passive: false});
       window.addEventListener('touchmove', (e) => { 
         if (isDraggingKnob) {
@@ -697,12 +739,13 @@
         flowLine.classList.add('fade-out');
         
         let ringIdx = sequencia.length; 
-        let ring = document.getElementById(`ring-group-${ringIdx}`).querySelector('.liquid-layer');
-        ring.classList.add('filled');
+        let ring = document.getElementById(`ring-group-${ringIdx}`);
+        ring.querySelector('.liquid-glow').classList.add('filled');
+        ring.querySelector('.liquid-core').classList.add('filled');
 
         let tubeIdx = stepIndex;
-        let tube = document.getElementById(`tube-liquid-${tubeIdx}`);
-        tube.classList.add('filled');
+        document.getElementById(`tube-liquid-glow-${tubeIdx}`).classList.add('filled');
+        document.getElementById(`tube-liquid-core-${tubeIdx}`).classList.add('filled');
 
         let labelEl = document.querySelectorAll('.rune-label')[stepIndex];
         labelEl.classList.add('extracted');
@@ -720,16 +763,15 @@
       if (sequencia.length === 0) return;
       
       let ringIdx = sequencia.length - 1; 
-      let ring = document.getElementById(`ring-group-${ringIdx}`).querySelector('.liquid-layer');
-      ring.classList.remove('filled');
-      ring.classList.remove('boil');
+      let ring = document.getElementById(`ring-group-${ringIdx}`);
+      ring.querySelector('.liquid-glow').classList.remove('filled', 'boil');
+      ring.querySelector('.liquid-core').classList.remove('filled', 'boil');
       
       let lastLabel = sequencia.pop();
       let tubeIdx = labelsData.indexOf(lastLabel);
       
-      let tube = document.getElementById(`tube-liquid-${tubeIdx}`);
-      tube.classList.remove('filled');
-      tube.classList.remove('boil');
+      document.getElementById(`tube-liquid-glow-${tubeIdx}`).classList.remove('filled', 'boil');
+      document.getElementById(`tube-liquid-core-${tubeIdx}`).classList.remove('filled', 'boil');
 
       let labelEl = document.querySelectorAll('.rune-label')[tubeIdx];
       labelEl.classList.remove('extracted');
@@ -741,14 +783,13 @@
       if (locked || isAnimating) return;
       sequencia = [];
       
-      document.querySelectorAll('.liquid-layer').forEach(ring => {
-        ring.classList.remove('filled');
-        ring.classList.remove('boil');
+      document.querySelectorAll('.liquid-glow, .liquid-core').forEach(ring => {
+        ring.classList.remove('filled', 'boil');
+        ring.style.stroke = '';
       });
 
-      document.querySelectorAll('.tube-liquid').forEach(tube => {
-        tube.classList.remove('filled');
-        tube.classList.remove('boil');
+      document.querySelectorAll('.tube-liquid-glow, .tube-liquid-core').forEach(tube => {
+        tube.classList.remove('filled', 'boil');
         tube.style.stroke = '';
       });
 
@@ -780,12 +821,17 @@
           g.style.animation = `spin ${2.5 + i*0.5}s linear infinite`;
           g.style.animationDirection = dir === 1 ? 'normal' : 'reverse';
           
-          let liquid = g.querySelector('.liquid-layer');
-          liquid.style.stroke = 'var(--success)';
+          let glow = g.querySelector('.liquid-glow');
+          let core = g.querySelector('.liquid-core');
+          glow.style.stroke = 'var(--success)';
+          core.style.stroke = '#031020'; // Core azul escuro purificado
         });
 
-        document.querySelectorAll('.tube-liquid.filled').forEach((tube) => {
+        document.querySelectorAll('.tube-liquid-glow.filled').forEach((tube) => {
           tube.style.stroke = 'var(--success)';
+        });
+        document.querySelectorAll('.tube-liquid-core.filled').forEach((tube) => {
+          tube.style.stroke = '#031020';
         });
 
         document.querySelectorAll('.rune-label.extracted').forEach(label => {
@@ -799,11 +845,11 @@
         document.body.classList.add('shake');
         setTimeout(() => document.body.classList.remove('shake'), 600);
         
-        document.querySelectorAll('.liquid-layer.filled').forEach(ring => {
+        document.querySelectorAll('.liquid-glow.filled, .liquid-core.filled').forEach(ring => {
           ring.classList.add('boil');
         });
 
-        document.querySelectorAll('.tube-liquid.filled').forEach(tube => {
+        document.querySelectorAll('.tube-liquid-glow.filled, .tube-liquid-core.filled').forEach(tube => {
           tube.classList.add('boil');
         });
         

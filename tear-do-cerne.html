@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>TEAR DO CERNE — Painel de Controle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-deep:        #0a0a0c;
+      --bg-void:        #0d0a18;
+      --bg-mist:        #1a0b2e;
+      --bone:           #d4c5b0;
+      --bone-dim:       #8a7d6b;
+      --bone-faint:     #3a3228;
+      --accent-azure:   #4db8ff;
+      --accent-purp:    #7b2fff;
+      --accent-purp-hi: #a855f7;
+      --accent-red:     #ff3333;
+      --glow-azure:     0 0 12px #4db8ffaa, 0 0 28px #4db8ff55;
+      --glow-purp:      0 0 12px #7b2fffaa, 0 0 28px #7b2fff55;
+      --border-bone:    1px solid #d4c5b033;
+      --border-bone-hi: 1px solid #d4c5b077;
+      --font-sys:       'Share Tech Mono', 'Courier New', monospace;
+      --font-title:     'UnifrakturMaguntia', serif;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      background-color: var(--bg-deep);
+      color: var(--bone);
+      font-family: var(--font-sys);
+      overflow-x: hidden;
+    }
+
+    /* ============================================================
+       BACKGROUND MIASMA EFFECT
+    ============================================================ */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 30%, #1a0b2e55 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 70%, #0f052288 0%, transparent 55%),
+        radial-gradient(ellipse 100% 40% at 50% 100%, #12042eaa 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+      animation: miasmaDrift 18s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 180px 180px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    @keyframes miasmaDrift {
+      0%   { opacity: 0.7; transform: scale(1) translateY(0px); }
+      50%  { opacity: 1;   transform: scale(1.04) translateY(-10px); }
+      100% { opacity: 0.8; transform: scale(0.98) translateY(6px); }
+    }
+
+    /* ============================================================
+       LAYOUT WRAPPER
+    ============================================================ */
+    #app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      padding: 24px 16px 40px;
+      gap: 28px;
+    }
+
+    /* ============================================================
+       HEADER / TITLE PANEL
+    ============================================================ */
+    #header {
+      text-align: center;
+      width: 100%;
+      max-width: 640px;
+    }
+
+    #header .sigil {
+      font-size: 1.1rem;
+      letter-spacing: 0.6em;
+      color: var(--bone-dim);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      animation: flickerDim 6s ease-in-out infinite;
+    }
+
+    #header h1 {
+      font-family: var(--font-title);
+      font-size: clamp(2.8rem, 9vw, 4.5rem);
+      color: var(--bone);
+      text-shadow:
+        0 0 10px #d4c5b066,
+        0 0 30px #a08c7022,
+        0 2px 4px #00000099;
+      letter-spacing: 0.04em;
+      line-height: 1;
+    }
+
+    #header .subtitle {
+      font-size: 0.7rem;
+      letter-spacing: 0.5em;
+      color: var(--bone-dim);
+      margin-top: 8px;
+      text-transform: uppercase;
+    }
+
+    /* Decorative separator */
+    .separator {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--bone-faint);
+    }
+    .separator::before,
+    .separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--bone-dim) 40%, transparent);
+    }
+    .separator-glyph {
+      font-size: 1rem;
+      color: var(--bone-dim);
+    }
+
+    /* ============================================================
+       VISOR — DISPLAY (4 SLOTS)
+    ============================================================ */
+    #visor-panel {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    #visor-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.4em;
+      color: var(--bone-dim);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    #visor {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .visor-slot {
+      background: #0d0b14;
+      border: 1px solid #d4c5b044;
+      border-radius: 4px;
+      padding: 14px 6px;
+      text-align: center;
+      font-family: var(--font-sys);
+      font-size: clamp(0.55rem, 2.2vw, 0.8rem);
+      letter-spacing: 0.08em;
+      color: var(--bone-dim);
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.3s, color 0.3s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .visor-slot::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, #ffffff08 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .visor-slot.filled {
+      border-color: var(--accent-purp-hi);
+      color: var(--bone);
+      box-shadow: 0 0 8px #a855f744, inset 0 0 12px #7b2fff11;
+      animation: slotFill 0.25s ease-out;
+    }
+
+    .visor-slot .empty-mark {
+      color: var(--bone-faint);
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    @keyframes slotFill {
+      0%   { transform: scale(0.92); opacity: 0.4; }
+      60%  { transform: scale(1.04); }
+      100% { transform: scale(1);    opacity: 1; }
+    }
+
+    /* ============================================================
+       RUNE BUTTONS GRID
+    ============================================================ */
+    #rune-grid-panel {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    #rune-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.4em;
+      color: var(--bone-dim);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    #rune-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 400px) {
+      #rune-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .rune-btn {
+      background: #100c1f;
+      border: 1px solid #d4c5b033;
+      border-radius: 4px;
+      color: var(--bone);
+      font-family: var(--font-sys);
+      font-size: clamp(0.6rem, 2vw, 0.78rem);
+      letter-spacing: 0.1em;
+      padding: 16px 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s, color 0.2s;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .rune-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, #a855f722 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .rune-btn:hover:not(:disabled)::before {
+      opacity: 1;
+    }
+
+    .rune-btn:hover:not(:disabled) {
+      border-color: #d4c5b088;
+      box-shadow: 0 0 10px #7b2fff44, 0 0 2px #d4c5b033;
+      color: #fff;
+    }
+
+    .rune-btn:active:not(:disabled) {
+      transform: scale(0.95);
+      background: #1a0b2e;
+    }
+
+    .rune-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       ACTION BUTTONS
+    ============================================================ */
+    #action-panel {
+      width: 100%;
+      max-width: 640px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: var(--border-bone-hi);
+      border-radius: 4px;
+      color: var(--bone-dim);
+      font-family: var(--font-sys);
+      font-size: clamp(0.55rem, 1.8vw, 0.7rem);
+      letter-spacing: 0.1em;
+      padding: 12px 8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .action-btn:hover:not(:disabled) {
+      background: #1a0b2e44;
+      color: var(--bone);
+      border-color: var(--bone-dim);
+    }
+
+    .action-btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* INJECT BUTTON — spans full width */
+    #btn-inject {
+      grid-column: 1 / -1;
+      background: #0d0520;
+      border: 1px solid var(--accent-purp);
+      color: var(--accent-purp-hi);
+      font-size: clamp(0.7rem, 2.2vw, 0.9rem);
+      letter-spacing: 0.3em;
+      padding: 18px 16px;
+      box-shadow: var(--glow-purp);
+      margin-top: 4px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      font-family: var(--font-sys);
+      text-transform: uppercase;
+      border-radius: 4px;
+      transition: background 0.3s, box-shadow 0.3s, color 0.3s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #btn-inject::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 40%;
+      height: 200%;
+      background: linear-gradient(90deg, transparent, #ffffff14, transparent);
+      transform: skewX(-20deg);
+      animation: shimmer 4s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%   { left: -60%; }
+      60%  { left: 130%; }
+      100% { left: 130%; }
+    }
+
+    #btn-inject:hover:not(:disabled) {
+      background: #1a0b2e;
+      box-shadow: 0 0 20px #7b2fffcc, 0 0 50px #7b2fff44;
+      color: #fff;
+    }
+
+    #btn-inject:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    #btn-inject:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       STATUS MESSAGE (BELOW BUTTONS)
+    ============================================================ */
+    #status-msg {
+      width: 100%;
+      max-width: 640px;
+      min-height: 28px;
+      text-align: center;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      color: var(--bone-dim);
+      text-transform: uppercase;
+      transition: color 0.5s;
+    }
+
+    /* ============================================================
+       FLASH OVERLAYS
+    ============================================================ */
+    #flash-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    #flash-overlay.flash-success {
+      animation: flashSuccess 1.4s ease-out forwards;
+      background: radial-gradient(ellipse at center, #4db8ff33 0%, transparent 70%);
+    }
+
+    #flash-overlay.flash-failure {
+      animation: flashFailure 1s ease-out forwards;
+      background: radial-gradient(ellipse at center, #7b2fff66 0%, transparent 70%);
+    }
+
+    @keyframes flashSuccess {
+      0%   { opacity: 0; }
+      10%  { opacity: 1; }
+      40%  { opacity: 0.6; }
+      60%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes flashFailure {
+      0%   { opacity: 0; }
+      8%   { opacity: 1; }
+      18%  { opacity: 0.2; }
+      28%  { opacity: 0.9; }
+      45%  { opacity: 0.1; }
+      60%  { opacity: 0.8; }
+      100% { opacity: 0; }
+    }
+
+    /* Screen shake on failure */
+    #app.shake {
+      animation: screenShake 0.55s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes screenShake {
+      0%  { transform: translateX(0); }
+      10% { transform: translateX(-8px) rotate(-0.5deg); }
+      20% { transform: translateX(8px)  rotate(0.5deg); }
+      30% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      50% { transform: translateX(-3px); }
+      60% { transform: translateX(3px); }
+      70% { transform: translateX(-2px); }
+      85% { transform: translateX(2px); }
+      100%{ transform: translateX(0); }
+    }
+
+    /* ============================================================
+       MODAL — FAILURE / SUCCESS MESSAGE
+    ============================================================ */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: #00000099;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+      backdrop-filter: blur(3px);
+    }
+
+    #modal-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #modal-box {
+      background: #0a0812;
+      border-radius: 4px;
+      padding: 32px 28px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+      transform: scale(0.88);
+      transition: transform 0.3s ease-out;
+    }
+
+    #modal-overlay.visible #modal-box {
+      transform: scale(1);
+    }
+
+    #modal-box.modal-failure {
+      border: 1px solid #ff333366;
+      box-shadow: 0 0 30px #ff333333, 0 0 60px #7b2fff22;
+    }
+
+    #modal-box.modal-success {
+      border: 1px solid #4db8ff66;
+      box-shadow: 0 0 30px #4db8ff44, 0 0 60px #4db8ff22;
+    }
+
+    #modal-title {
+      font-family: var(--font-sys);
+      font-size: clamp(0.75rem, 3vw, 1rem);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    #modal-box.modal-failure #modal-title {
+      color: var(--accent-red);
+      text-shadow: 0 0 10px #ff333399;
+    }
+
+    #modal-box.modal-success #modal-title {
+      color: var(--accent-azure);
+      text-shadow: 0 0 10px #4db8ffaa;
+    }
+
+    #modal-body {
+      font-family: var(--font-sys);
+      font-size: clamp(0.65rem, 2.2vw, 0.82rem);
+      letter-spacing: 0.12em;
+      line-height: 1.7;
+      text-transform: uppercase;
+    }
+
+    #modal-box.modal-failure #modal-body {
+      color: #ff8888;
+    }
+
+    #modal-box.modal-success #modal-body {
+      color: #a8daff;
+    }
+
+    #modal-close {
+      margin-top: 24px;
+      background: transparent;
+      border: var(--border-bone-hi);
+      border-radius: 4px;
+      color: var(--bone-dim);
+      font-family: var(--font-sys);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      padding: 10px 24px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    #modal-close:hover {
+      background: #1a0b2e44;
+      color: var(--bone);
+    }
+
+    /* ============================================================
+       SUCCESS STATE — VISOR GLOW
+    ============================================================ */
+    #visor.success-state .visor-slot {
+      border-color: var(--accent-azure);
+      color: var(--accent-azure);
+      box-shadow: var(--glow-azure), inset 0 0 14px #4db8ff1a;
+      animation: pulseAzure 2s ease-in-out infinite;
+    }
+
+    @keyframes pulseAzure {
+      0%, 100% { box-shadow: 0 0 8px #4db8ff88, inset 0 0 10px #4db8ff11; }
+      50%       { box-shadow: 0 0 22px #4db8ffbb, inset 0 0 20px #4db8ff22; }
+    }
+
+    /* ============================================================
+       MISC ANIMATIONS
+    ============================================================ */
+    @keyframes flickerDim {
+      0%, 100% { opacity: 0.6; }
+      45%       { opacity: 0.4; }
+      50%       { opacity: 0.7; }
+      55%       { opacity: 0.3; }
+      60%       { opacity: 0.6; }
+    }
+
+    /* ============================================================
+       FOOTER ANNOTATION
+    ============================================================ */
+    #footer-note {
+      width: 100%;
+      max-width: 640px;
+      text-align: center;
+      font-size: 0.55rem;
+      letter-spacing: 0.3em;
+      color: var(--bone-faint);
+      text-transform: uppercase;
+      margin-top: auto;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- FLASH OVERLAY (tela pisca) -->
+  <div id="flash-overlay"></div>
+
+  <!-- MODAL DE RESULTADO -->
+  <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div id="modal-box">
+      <div id="modal-title"></div>
+      <div id="modal-body"></div>
+      <button id="modal-close" onclick="closeModal()">[ DISPENSAR ]</button>
+    </div>
+  </div>
+
+  <!-- APLICACAO PRINCIPAL -->
+  <div id="app">
+
+    <!-- CABECALHO -->
+    <header id="header">
+      <p class="sigil">&#9881; Sistema de Controle de Fluxo &#9881;</p>
+      <h1>Tear do Cerne</h1>
+      <p class="subtitle">Protocolo de Ativacao de Portal &mdash; v.&#8709;.7.II</p>
+    </header>
+
+    <div class="separator"><span class="separator-glyph">&#10022;</span></div>
+
+    <!-- VISOR DE SEQUENCIA -->
+    <section id="visor-panel" aria-label="Visor de Sequencia">
+      <p id="visor-label">// Sequencia de Ativacao &mdash; Inserir 4 Runas //</p>
+      <div id="visor">
+        <div class="visor-slot" id="slot-0"><span class="empty-mark">_</span></div>
+        <div class="visor-slot" id="slot-1"><span class="empty-mark">_</span></div>
+        <div class="visor-slot" id="slot-2"><span class="empty-mark">_</span></div>
+        <div class="visor-slot" id="slot-3"><span class="empty-mark">_</span></div>
+      </div>
+    </section>
+
+    <div class="separator"><span class="separator-glyph">&#10022;</span></div>
+
+    <!-- GRADE DE RUNAS -->
+    <section id="rune-grid-panel" aria-label="Grade de Runas">
+      <p id="rune-label">// Selecionar Runa de Sala //</p>
+      <div id="rune-grid">
+        <button class="rune-btn" onclick="insertRune('SINO')"    id="rune-SINO">    SINO    </button>
+        <button class="rune-btn" onclick="insertRune('SANGUE')"  id="rune-SANGUE">  SANGUE  </button>
+        <button class="rune-btn" onclick="insertRune('FOGO')"    id="rune-FOGO">    FOGO    </button>
+        <button class="rune-btn" onclick="insertRune('VELA')"    id="rune-VELA">    VELA    </button>
+        <button class="rune-btn" onclick="insertRune('CORVO')"   id="rune-CORVO">   CORVO   </button>
+        <button class="rune-btn" onclick="insertRune('ESPELHO')" id="rune-ESPELHO"> ESPELHO </button>
+        <button class="rune-btn" onclick="insertRune('LAGRIMA')" id="rune-LAGRIMA"> L&Aacute;GRIMA </button>
+        <button class="rune-btn" onclick="insertRune('OSSO')"    id="rune-OSSO">    OSSO    </button>
+      </div>
+    </section>
+
+    <!-- BOTOES DE ACAO -->
+    <section id="action-panel" aria-label="Controles de Acao">
+      <button class="action-btn" id="btn-undo"  onclick="undoLast()">[ DESFAZER &Uacute;LTIMA ]</button>
+      <button class="action-btn" id="btn-clear" onclick="clearAll()">[ LIMPAR TUDO ]</button>
+
+      <button id="btn-inject" onclick="injectFlux()">
+        &#10017; INJETAR FLUXO &#10017;
+      </button>
+    </section>
+
+    <!-- MENSAGEM DE STATUS -->
+    <p id="status-msg">// Aguardando sequencia de ativacao... //</p>
+
+    <!-- RODAPE -->
+    <footer id="footer-note">
+      &#9888; &mdash; uso exclusivo do operador autorizado &mdash; &#9888;
+    </footer>
+
+  </div><!-- /#app -->
+
+  <script>
+    /* ============================================================
+       CONFIGURACAO — SENHA SECRETA
+       Para alterar a sequencia correta, edite o array abaixo.
+       Valores disponiveis (use exatamente como estao):
+         "SINO", "SANGUE", "FOGO", "VELA",
+         "CORVO", "ESPELHO", "LAGRIMA", "OSSO"
+       A ordem importa. Maximo de 4 elementos.
+    ============================================================ */
+    const SENHA_CORRETA = ["SINO", "SANGUE", "VELA", "OSSO"]; // <- ALTERE AQUI A SEQUENCIA SECRETA
+
+    /* ============================================================
+       ESTADO DA APLICACAO
+    ============================================================ */
+    let sequencia = [];           // Array com as runas atualmente no visor
+    let sistemaBloqueado = false; // true apos sucesso — desativa todos os botoes
+
+    /* ============================================================
+       REFERENCIAS DO DOM
+    ============================================================ */
+    const slots        = [0, 1, 2, 3].map(i => document.getElementById('slot-' + i));
+    const flashOverlay = document.getElementById('flash-overlay');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalBox     = document.getElementById('modal-box');
+    const modalTitle   = document.getElementById('modal-title');
+    const modalBody    = document.getElementById('modal-body');
+    const statusMsg    = document.getElementById('status-msg');
+    const appEl        = document.getElementById('app');
+    const visorEl      = document.getElementById('visor');
+    const allRuneBtns  = document.querySelectorAll('.rune-btn');
+    const btnUndo      = document.getElementById('btn-undo');
+    const btnClear     = document.getElementById('btn-clear');
+    const btnInject    = document.getElementById('btn-inject');
+
+    /* ============================================================
+       ATUALIZA O VISOR COM O ESTADO ATUAL DA SEQUENCIA
+    ============================================================ */
+    function renderVisor() {
+      slots.forEach(function(slot, i) {
+        if (sequencia[i]) {
+          // Slot preenchido
+          slot.classList.add('filled');
+          // Exibe label legivel (LAGRIMA vira LAGRIMA mas com acento para exibicao)
+          slot.innerHTML = sequencia[i] === 'LAGRIMA' ? 'L&Aacute;GRIMA' : sequencia[i];
+        } else {
+          // Slot vazio
+          slot.classList.remove('filled');
+          slot.innerHTML = '<span class="empty-mark">_</span>';
+        }
+      });
+    }
+
+    /* ============================================================
+       INSERIR RUNA NO PROXIMO SLOT VAZIO
+    ============================================================ */
+    function insertRune(nome) {
+      if (sistemaBloqueado) return;
+      if (sequencia.length >= 4) {
+        // Visor cheio — pulsa levemente para indicar que nao ha espaco
+        pulseWarning();
+        return;
+      }
+      sequencia.push(nome);
+      renderVisor();
+      updateStatus();
+    }
+
+    /* ============================================================
+       DESFAZER ULTIMA RUNA INSERIDA
+    ============================================================ */
+    function undoLast() {
+      if (sistemaBloqueado) return;
+      if (sequencia.length === 0) return;
+      sequencia.pop();
+      renderVisor();
+      updateStatus();
+    }
+
+    /* ============================================================
+       LIMPAR TODOS OS SLOTS
+    ============================================================ */
+    function clearAll() {
+      if (sistemaBloqueado) return;
+      sequencia = [];
+      renderVisor();
+      updateStatus();
+    }
+
+    /* ============================================================
+       ATUALIZA A MENSAGEM DE STATUS INFERIOR
+    ============================================================ */
+    function updateStatus() {
+      var count = sequencia.length;
+      if (count === 0) {
+        statusMsg.textContent = '// Aguardando sequencia de ativacao... //';
+        statusMsg.style.color = 'var(--bone-dim)';
+      } else if (count < 4) {
+        statusMsg.textContent = '// ' + count + '/4 runas inseridas — sequencia incompleta //';
+        statusMsg.style.color = 'var(--bone-dim)';
+      } else {
+        statusMsg.textContent = '// Sequencia completa — pronta para injecao de fluxo //';
+        statusMsg.style.color = 'var(--accent-purp-hi)';
+      }
+    }
+
+    /* ============================================================
+       VALIDACAO — BOTAO "INJETAR FLUXO"
+    ============================================================ */
+    function injectFlux() {
+      if (sistemaBloqueado) return;
+
+      // Verifica se a sequencia tem 4 runas e corresponde a senha
+      var ehValida =
+        sequencia.length === SENHA_CORRETA.length &&
+        sequencia.every(function(runa, i) { return runa === SENHA_CORRETA[i]; });
+
+      if (ehValida) {
+        triggerSuccess();
+      } else {
+        triggerFailure();
+      }
+    }
+
+    /* ============================================================
+       ESTADO DE SUCESSO
+    ============================================================ */
+    function triggerSuccess() {
+      // Bloqueia o sistema permanentemente
+      sistemaBloqueado = true;
+      lockAllButtons();
+
+      // Aplica classe de glow azul no visor
+      visorEl.classList.add('success-state');
+
+      // Flash azul etereo na tela
+      triggerFlash('flash-success');
+
+      // Atualiza status
+      statusMsg.textContent = '// FLUXO ESTABILIZADO — ACESSO CONCEDIDO //';
+      statusMsg.style.color = 'var(--accent-azure)';
+
+      // Exibe modal de sucesso apos pequeno delay (para o flash aparecer primeiro)
+      setTimeout(function() {
+        showModal(
+          'success',
+          '\u2726 SISTEMA ESTABILIZADO \u2726',
+          'PORTAL DA MANDIBULA ABERTO.\nFluxo do Cerne detectado e selado.\nPassagem liberada para o operador.'
+        );
+      }, 600);
+    }
+
+    /* ============================================================
+       ESTADO DE FALHA
+    ============================================================ */
+    function triggerFailure() {
+      // Flash roxo violento + shake
+      triggerFlash('flash-failure');
+      triggerShake();
+
+      // Atualiza status (NAO limpa o visor)
+      statusMsg.textContent = '// FALHA CRITICA — MIASMA DETECTADO //';
+      statusMsg.style.color = 'var(--accent-red)';
+
+      // Exibe modal de falha apos pequeno delay
+      setTimeout(function() {
+        showModal(
+          'failure',
+          '\u26A0 FALHA DE FLUXO! \u26A0',
+          'MIASMA GELATINOSO EXALADO.\nTODOS RECEBEM DANO NECROTICO.\n\nSequencia rejeitada pelo Cerne.\nDesfaca ou limpe e tente novamente.'
+        );
+      }, 400);
+    }
+
+    /* ============================================================
+       HELPERS: FLASH, SHAKE, BLOQUEIO
+    ============================================================ */
+    function triggerFlash(cls) {
+      flashOverlay.className = '';
+      // Forca reflow para reiniciar animacao
+      void flashOverlay.offsetWidth;
+      flashOverlay.classList.add(cls);
+    }
+
+    function triggerShake() {
+      appEl.classList.remove('shake');
+      void appEl.offsetWidth;
+      appEl.classList.add('shake');
+      appEl.addEventListener('animationend', function() {
+        appEl.classList.remove('shake');
+      }, { once: true });
+    }
+
+    function pulseWarning() {
+      // Pequena pulsacao nos slots ja preenchidos
+      slots.forEach(function(s) {
+        if (s.classList.contains('filled')) {
+          s.style.borderColor = '#ff333399';
+          setTimeout(function() { s.style.borderColor = ''; }, 400);
+        }
+      });
+    }
+
+    function lockAllButtons() {
+      allRuneBtns.forEach(function(b) { b.disabled = true; });
+      btnUndo.disabled   = true;
+      btnClear.disabled  = true;
+      btnInject.disabled = true;
+    }
+
+    /* ============================================================
+       MODAL
+    ============================================================ */
+    function showModal(type, titulo, corpo) {
+      modalBox.className = 'modal-' + type;
+      modalTitle.textContent = titulo;
+      // Converte quebras de linha em <br>
+      modalBody.innerHTML = corpo.replace(/\n/g, '<br>');
+      modalOverlay.classList.add('visible');
+    }
+
+    function closeModal() {
+      modalOverlay.classList.remove('visible');
+      // Reseta status se sistema ainda ativo (caso de falha)
+      if (!sistemaBloqueado) {
+        updateStatus();
+      }
+    }
+
+    /* ============================================================
+       INICIALIZACAO
+    ============================================================ */
+    renderVisor();
+    updateStatus();
+  </script>
+</body>
+</html>
