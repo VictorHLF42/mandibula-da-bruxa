@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>O SELO DA MANDÍBULA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --bone: #d4c5b0;
+      --bone-dim: #8a7d6b;
+      --iron: #332f2c;
+      --iron-light: #594f46;
+      --liquid: #1a0826; /* Roxo ultra escuro */
+      --miasma: #7a1599; 
+      --miasma-light: #dfb2ff;
+      --success: #4db8ff;
+      --danger: #ff3333;
+      --font-title: 'UnifrakturMaguntia', serif;
+      --font-ui: 'Share Tech Mono', 'Courier New', monospace;
+    }
+
+    /* PERFORMANCE FIX: Fundo simplificado. 
+       Filtros fractais em SVG destroem o framerate de tablets! */
+    body {
+      background-color: var(--bg);
+      background-image: radial-gradient(circle at 50% 50%, #17141a 0%, var(--bg) 80%);
+      color: var(--bone);
+      font-family: var(--font-ui);
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    header { margin-bottom: 10px; z-index: 10; }
+    h1 {
+      font-family: var(--font-title);
+      font-size: 2.5rem;
+      margin: 0;
+      color: var(--bone);
+      text-shadow: 0 0 10px rgba(212, 197, 176, 0.3);
+    }
+    
+    .system-log {
+      color: var(--bone-dim);
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      margin-top: 5px;
+      height: 20px;
+      text-transform: uppercase;
+    }
+
+    .astrolabe-wrapper {
+      position: relative;
+      width: 600px;
+      height: 600px;
+      margin: 0 auto 15px;
+    }
+
+    /* Fundo Pneumático */
+    #tubes-container {
+      position: absolute; 
+      top: 50%;
+      left: 50%;
+      width: 2000px;
+      height: 2000px;
+      transform: translate(-50%, -50%);
+      z-index: -1; 
+      pointer-events: none;
+    }
+    
+    #tubes-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* PERFORMANCE FIX: Removido os SVG drop-shadows dos tubos */
+    .tube-base {
+      stroke: #11100f;
+      stroke-width: 32px;
+      stroke-linecap: round;
+    }
+
+    .tube-groove {
+      stroke: #020202;
+      stroke-width: 14px;
+      stroke-linecap: round;
+    }
+
+    .tube-liquid {
+      stroke: var(--liquid);
+      stroke-width: 10px;
+      stroke-linecap: round;
+      stroke-dasharray: 1500;
+      stroke-dashoffset: 1500;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .tube-liquid.filled {
+      stroke-dashoffset: 0;
+    }
+
+    .tube-liquid.boil {
+      animation: boilTube 0.25s infinite alternate !important;
+    }
+
+    @keyframes boilTube {
+      0% { stroke: #050505; }
+      100% { stroke: var(--miasma); }
+    }
+
+    #labels-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .rune-label {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      color: var(--bone-dim);
+      font-family: var(--font-title);
+      font-size: 1.25rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 5px #000;
+      transition: color 0.3s, text-shadow 0.3s, transform 0.3s;
+    }
+
+    .rune-label.active {
+      color: var(--miasma-light);
+      text-shadow: 0 0 10px var(--miasma), 0 0 20px var(--miasma);
+      transform: translate(-50%, -50%) scale(1.15);
+      z-index: 5;
+    }
+
+    .rune-label.extracted {
+      color: var(--miasma-light);
+      text-shadow: 0 0 15px var(--miasma);
+    }
+    
+    .rune-label.extracted.active {
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+
+    .astrolabe-svg {
+      position: absolute;
+      top: 100px;
+      left: 100px;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, #11100f, #0a0a0c);
+      box-shadow: inset 0 0 30px #000, 0 0 0 8px var(--iron), 0 0 25px 10px #000;
+    }
+
+    .gear-teeth {
+      fill: none;
+      stroke: var(--iron);
+      stroke-width: 12;
+    }
+    
+    .gear-base {
+      fill: none;
+      stroke: #030303;
+      stroke-width: 8;
+    }
+
+    .slosh {
+      fill: none;
+      stroke: var(--liquid);
+      stroke-width: 6;
+      stroke-dasharray: 20 60 5 40 10 80;
+      transition: stroke-dashoffset 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .liquid-layer {
+      fill: none;
+      stroke: var(--liquid);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: var(--circ);
+      stroke-dashoffset: var(--circ);
+      transition: stroke-dashoffset 0.6s ease-out;
+    }
+
+    .liquid-layer.filled {
+      stroke-dashoffset: 0;
+    }
+
+    .flow-line {
+      stroke: var(--liquid);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 180;
+      stroke-dashoffset: 180;
+      opacity: 0;
+    }
+
+    .flow-line.active {
+      stroke-dashoffset: 0;
+      opacity: 1;
+      transition: stroke-dashoffset 0.4s ease-out, opacity 0.1s;
+    }
+
+    .flow-line.fade-out {
+      stroke-dashoffset: 0;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    #needle-group {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-origin: 200px 200px;
+    }
+    
+    #flow-rotator {
+      transform-origin: 200px 200px;
+    }
+
+    /* === O PAINEL DE CONTROLE (KNOB) === */
+    .dashboard-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      z-index: 10;
+      width: 100%;
+      max-width: 650px;
+      background: #0d0c0a;
+      padding: 15px 20px;
+      border: 2px solid var(--iron);
+      border-radius: 8px;
+      box-shadow: 0 10px 30px #000;
+    }
+
+    .panel-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .knob-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .knob-dial {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: conic-gradient(from 180deg, #2a2623, #151311, #2a2623, #151311, #2a2623);
+      box-shadow: 0 5px 15px #000, inset 0 2px 5px rgba(255,255,255,0.05), inset 0 -4px 10px #000;
+      border: 4px solid var(--iron);
+      position: relative;
+      cursor: pointer;
+      cursor: grab;
+      transform: rotate(0deg);
+      transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+      touch-action: none; /* Crucial para o drag no tablet funcionar */
+    }
+
+    .knob-dial:active {
+      cursor: grabbing;
+    }
+
+    .knob-dot {
+      width: 10px;
+      height: 10px;
+      background: var(--miasma-light);
+      border-radius: 50%;
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 8px var(--miasma);
+    }
+
+    .knob-label {
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      color: var(--bone-dim);
+      font-weight: bold;
+    }
+
+    button {
+      background: #151311;
+      border: 1px solid var(--iron-light);
+      color: var(--bone-dim);
+      font-family: var(--font-ui);
+      font-size: 0.8rem;
+      padding: 12px 10px;
+      cursor: pointer;
+      box-shadow: inset 0 0 5px #000;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+
+    button:hover:not(:disabled) {
+      background: #1a1816;
+      color: var(--bone);
+      border-color: var(--bone-dim);
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.96);
+    }
+
+    button.primary {
+      background: #1a1816;
+      border-color: #7b6d61;
+      color: var(--bone);
+      font-weight: bold;
+    }
+
+    button.danger {
+      background: #2a0b0b;
+      border-color: #5a1a1a;
+      color: var(--bone);
+      font-weight: bold;
+    }
+
+    button.danger:hover:not(:disabled) {
+      background: #3a1515;
+      border-color: #8a2a2a;
+      box-shadow: 0 0 10px rgba(255, 51, 51, 0.3);
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    /* Animations */
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      10%, 30%, 50%, 70%, 90% { transform: translate(-8px, -4px) rotate(-1deg); }
+      20%, 40%, 60%, 80% { transform: translate(8px, 4px) rotate(1deg); }
+    }
+    .shake {
+      animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes etherealPulse {
+      0%, 100% { background-color: var(--bg); }
+      50% { background-color: #0b1c29; }
+    }
+    .ethereal-pulse {
+      animation: etherealPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .ring-fill {
+      transform-origin: 200px 200px;
+    }
+
+    /* Modal */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    #modal-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    #modal-box {
+      background: #0d0c0b;
+      border: 2px solid var(--iron);
+      padding: 30px 40px;
+      text-align: center;
+      box-shadow: 0 0 30px #000;
+      max-width: 400px;
+      width: 90%;
+    }
+    #modal-box.success {
+      border-color: var(--success);
+      box-shadow: 0 0 30px rgba(77, 184, 255, 0.2);
+    }
+    #modal-box.danger {
+      border-color: var(--danger);
+      box-shadow: 0 0 30px rgba(255, 51, 51, 0.2);
+    }
+    #modal-title {
+      font-family: var(--font-title);
+      font-size: 1.8rem;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    #modal-box.success #modal-title { color: var(--success); }
+    #modal-box.danger #modal-title { color: var(--danger); }
+    #modal-desc {
+      font-size: 1rem;
+      margin-bottom: 25px;
+      color: var(--bone);
+      line-height: 1.5;
+    }
+
+    /* Responsive Tablet/Mobile */
+    @media (max-width: 768px) {
+      .astrolabe-wrapper {
+        transform: scale(0.65);
+        margin: -90px auto -60px;
+      }
+      .dashboard-controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 15px;
+        gap: 15px;
+      }
+      .knob-wrapper {
+        order: -1; 
+        width: 100%; 
+        margin-bottom: 10px;
+      }
+      .panel-section {
+        flex-direction: column;
+        width: 45%;
+      }
+      h1 { font-size: 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tubos Pneumáticos ao Fundo -->
+  <div id="tubes-container">
+    <svg id="tubes-svg" viewBox="0 0 2000 2000">
+      <g id="tubes-group"></g>
+    </svg>
+  </div>
+
+  <header>
+    <h1>O Selo da Mand&iacute;bula</h1>
+    <div class="system-log" id="log-out">&gt;&gt; SISTEMA INICIADO...</div>
+  </header>
+
+  <div class="astrolabe-wrapper">
+    <div id="labels-container"></div>
+    
+    <svg class="astrolabe-svg" viewBox="0 0 400 400">
+      <circle cx="200" cy="200" r="160" class="gear-teeth" stroke-dasharray="12 8" />
+      <circle cx="200" cy="200" r="125" class="gear-teeth" stroke-dasharray="10 8" />
+      <circle cx="200" cy="200" r="90" class="gear-teeth" stroke-dasharray="8 6" />
+      <circle cx="200" cy="200" r="55" class="gear-teeth" stroke-dasharray="6 6" />
+
+      <circle cx="200" cy="200" r="160" class="gear-base" />
+      <circle cx="200" cy="200" r="125" class="gear-base" />
+      <circle cx="200" cy="200" r="90" class="gear-base" />
+      <circle cx="200" cy="200" r="55" class="gear-base" />
+
+      <g opacity="0.6">
+        <circle cx="200" cy="200" r="160" class="slosh" />
+        <circle cx="200" cy="200" r="125" class="slosh" />
+        <circle cx="200" cy="200" r="90" class="slosh" />
+        <circle cx="200" cy="200" r="55" class="slosh" />
+      </g>
+
+      <g class="ring-fill" id="ring-group-0">
+        <circle cx="200" cy="200" r="55" class="liquid-layer" style="--circ: 346;" />
+      </g>
+      <g class="ring-fill" id="ring-group-1">
+        <circle cx="200" cy="200" r="90" class="liquid-layer" style="--circ: 566;" />
+      </g>
+      <g class="ring-fill" id="ring-group-2">
+        <circle cx="200" cy="200" r="125" class="liquid-layer" style="--circ: 786;" />
+      </g>
+      <g class="ring-fill" id="ring-group-3">
+        <circle cx="200" cy="200" r="160" class="liquid-layer" style="--circ: 1006;" />
+      </g>
+
+      <g id="flow-rotator">
+        <line id="flow-line" x1="200" y1="200" x2="200" y2="20" class="flow-line" />
+      </g>
+
+      <g id="needle-group">
+        <path d="M196,200 L200,10 L204,200 L200,390 Z" fill="var(--iron)" stroke="#050505" stroke-width="1"/>
+        <circle cx="200" cy="200" r="15" fill="var(--iron)" stroke="#000" stroke-width="3"/>
+        <circle cx="200" cy="200" r="5" fill="var(--bone)" />
+      </g>
+    </svg>
+  </div>
+
+  <!-- NOVO PAINEL DE CONTROLE COM SINTONIZADOR -->
+  <div class="dashboard-controls">
+    <div class="panel-section">
+      <button class="primary" id="btn-extract" onclick="extractRune()">EXTRAIR RUNA</button>
+      <button id="btn-undo" onclick="undoLast()">DESFAZER</button>
+    </div>
+    
+    <div class="knob-wrapper">
+      <div id="knob" class="knob-dial">
+        <div class="knob-dot"></div>
+      </div>
+      <div class="knob-label">SINTONIZADOR</div>
+    </div>
+    
+    <div class="panel-section">
+      <button id="btn-clear" onclick="clearAll()">LIMPAR TUDO</button>
+      <button class="danger" id="btn-inject" onclick="injectFlux()">INJETAR FLUXO</button>
+    </div>
+  </div>
+
+  <div id="modal-overlay">
+    <div id="modal-box">
+      <h2 id="modal-title"></h2>
+      <p id="modal-desc"></p>
+      <button id="modal-close-btn" onclick="closeModal()">[ RECONHECER ]</button>
+    </div>
+  </div>
+
+  <script>
+    // A Senha Secreta 
+    const SENHA_CORRETA = ["FOGO", "OSSO", "MEMÓRIA", "ESPELHO"];
+
+    const labelsData = ["FOGO", "OSSO", "MEMÓRIA", "ESPELHO", "SANGUE", "CORVO", "LÁGRIMA", "SINO"];
+    let sequencia = [];
+    let cumulAngle = 0;
+    let stepIndex = 0;
+    let isAnimating = false;
+    let locked = false;
+    let sloshVal = 0;
+    let isDraggingKnob = false;
+
+    function init() {
+      const container = document.getElementById('labels-container');
+      const R = 275; 
+      labelsData.forEach((text, i) => {
+        let angle = (i * 45 - 90) * (Math.PI / 180);
+        let x = 300 + Math.cos(angle) * R;
+        let y = 300 + Math.sin(angle) * R;
+        let div = document.createElement('div');
+        div.className = 'rune-label';
+        div.style.left = `${x}px`;
+        div.style.top = `${y}px`;
+        div.innerText = text;
+        container.appendChild(div);
+      });
+
+      const tubesGroup = document.getElementById('tubes-group');
+      for (let i = 0; i < 8; i++) {
+        let angle = (i * 45 - 90) * (Math.PI / 180);
+        let x2 = 1000 + Math.cos(angle) * 1500; 
+        let y2 = 1000 + Math.sin(angle) * 1500;
+        
+        let outerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        outerLine.setAttribute("x1", 1000);
+        outerLine.setAttribute("y1", 1000);
+        outerLine.setAttribute("x2", x2);
+        outerLine.setAttribute("y2", y2);
+        outerLine.setAttribute("class", "tube-base");
+        
+        let innerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        innerLine.setAttribute("x1", 1000);
+        innerLine.setAttribute("y1", 1000);
+        innerLine.setAttribute("x2", x2);
+        innerLine.setAttribute("y2", y2);
+        innerLine.setAttribute("class", "tube-groove");
+        
+        let liquidLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        liquidLine.setAttribute("x1", 1000);
+        liquidLine.setAttribute("y1", 1000);
+        liquidLine.setAttribute("x2", x2);
+        liquidLine.setAttribute("y2", y2);
+        liquidLine.setAttribute("class", "tube-liquid");
+        liquidLine.setAttribute("id", `tube-liquid-${i}`);
+        
+        tubesGroup.appendChild(outerLine);
+        tubesGroup.appendChild(innerLine);
+        tubesGroup.appendChild(liquidLine);
+      }
+
+      updateNeedle();
+      initKnob();
+    }
+
+    function initKnob() {
+      const knob = document.getElementById('knob');
+      
+      const handleEvent = (e) => {
+        if (!isDraggingKnob || locked || isAnimating) return;
+        
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        let rect = knob.getBoundingClientRect();
+        let centerX = rect.left + rect.width / 2;
+        let centerY = rect.top + rect.height / 2;
+        
+        // Calcula o ângulo em radianos baseando-se no clique e no centro do botão
+        let angleRad = Math.atan2(clientY - centerY, clientX - centerX);
+        let angleDeg = angleRad * (180 / Math.PI) + 90; // O topo vira 0 graus
+        if (angleDeg < 0) angleDeg += 360;
+        
+        // Encontra o ponto de encaixe de 45 graus mais próximo (0 a 7)
+        let step = Math.round(angleDeg / 45) % 8;
+        
+        if (step !== stepIndex) {
+          let diff = step - stepIndex;
+          // Usa o caminho mais curto
+          if (diff < -4) diff += 8;
+          if (diff > 4) diff -= 8;
+          
+          cumulAngle += diff * 45;
+          stepIndex = step;
+          
+          updateNeedle();
+          updateKnob();
+          shiftSlosh(diff > 0 ? 1 : -1);
+          logMsg(`ALINHAMENTO: ${labelsData[stepIndex]}`);
+        }
+      };
+
+      knob.addEventListener('mousedown', (e) => { isDraggingKnob = true; handleEvent(e); });
+      window.addEventListener('mousemove', (e) => { if(isDraggingKnob) handleEvent(e); });
+      window.addEventListener('mouseup', () => { isDraggingKnob = false; });
+      
+      // Touch events nativos para o Tablet (com preventDefault para evitar rolagem da tela ao girar)
+      knob.addEventListener('touchstart', (e) => { isDraggingKnob = true; handleEvent(e); }, {passive: false});
+      window.addEventListener('touchmove', (e) => { 
+        if (isDraggingKnob) {
+          e.preventDefault(); 
+          handleEvent(e);
+        }
+      }, {passive: false});
+      window.addEventListener('touchend', () => { isDraggingKnob = false; });
+    }
+
+    function logMsg(msg) {
+      document.getElementById('log-out').innerText = `>> ${msg}`;
+    }
+
+    function updateNeedle() {
+      document.getElementById('needle-group').style.transform = `rotate(${cumulAngle}deg)`;
+      const labels = document.querySelectorAll('.rune-label');
+      labels.forEach((el, idx) => {
+        if (idx === stepIndex) el.classList.add('active');
+        else el.classList.remove('active');
+      });
+    }
+    
+    function updateKnob() {
+      document.getElementById('knob').style.transform = `rotate(${cumulAngle}deg)`;
+    }
+
+    function shiftSlosh(dir) {
+      sloshVal += dir * 40;
+      document.querySelectorAll('.slosh').forEach(el => {
+        el.style.strokeDashoffset = sloshVal;
+      });
+    }
+
+    function extractRune() {
+      if (locked || isAnimating) return;
+      if (sequencia.length >= 4) {
+        logMsg("ERRO: CAPACIDADE MÁXIMA ATINGIDA.");
+        return;
+      }
+      
+      isAnimating = true;
+      disableButtons(true);
+      
+      document.getElementById('flow-rotator').style.transform = `rotate(${cumulAngle}deg)`;
+      
+      let flowLine = document.getElementById('flow-line');
+      flowLine.classList.remove('fade-out');
+      flowLine.classList.add('active');
+      
+      setTimeout(() => {
+        flowLine.classList.remove('active');
+        flowLine.classList.add('fade-out');
+        
+        let ringIdx = sequencia.length; 
+        let ring = document.getElementById(`ring-group-${ringIdx}`).querySelector('.liquid-layer');
+        ring.classList.add('filled');
+
+        let tubeIdx = stepIndex;
+        let tube = document.getElementById(`tube-liquid-${tubeIdx}`);
+        tube.classList.add('filled');
+
+        let labelEl = document.querySelectorAll('.rune-label')[stepIndex];
+        labelEl.classList.add('extracted');
+        
+        sequencia.push(labelsData[stepIndex]);
+        logMsg(`RUNA EXTRAÍDA: ${labelsData[stepIndex]}`);
+        
+        isAnimating = false;
+        disableButtons(false);
+      }, 450); 
+    }
+
+    function undoLast() {
+      if (locked || isAnimating) return;
+      if (sequencia.length === 0) return;
+      
+      let ringIdx = sequencia.length - 1; 
+      let ring = document.getElementById(`ring-group-${ringIdx}`).querySelector('.liquid-layer');
+      ring.classList.remove('filled');
+      ring.classList.remove('boil');
+      
+      let lastLabel = sequencia.pop();
+      let tubeIdx = labelsData.indexOf(lastLabel);
+      
+      let tube = document.getElementById(`tube-liquid-${tubeIdx}`);
+      tube.classList.remove('filled');
+      tube.classList.remove('boil');
+
+      let labelEl = document.querySelectorAll('.rune-label')[tubeIdx];
+      labelEl.classList.remove('extracted');
+      
+      logMsg("ÚLTIMA RUNA DESCARTADA.");
+    }
+
+    function clearAll() {
+      if (locked || isAnimating) return;
+      sequencia = [];
+      
+      document.querySelectorAll('.liquid-layer').forEach(ring => {
+        ring.classList.remove('filled');
+        ring.classList.remove('boil');
+      });
+
+      document.querySelectorAll('.tube-liquid').forEach(tube => {
+        tube.classList.remove('filled');
+        tube.classList.remove('boil');
+        tube.style.stroke = '';
+      });
+
+      document.querySelectorAll('.rune-label').forEach(label => {
+        label.classList.remove('extracted');
+        label.style.color = '';
+        label.style.textShadow = '';
+      });
+
+      logMsg("SISTEMA PURGADO.");
+    }
+
+    function injectFlux() {
+      if (locked || isAnimating) return;
+      if (sequencia.length < 4) {
+        logMsg("ERRO: 4 RUNAS NECESSÁRIAS PARA INJEÇÃO.");
+        return;
+      }
+      
+      let valid = sequencia.every((val, index) => val === SENHA_CORRETA[index]);
+      
+      if (valid) {
+        locked = true;
+        disableButtons(true);
+        document.body.classList.add('ethereal-pulse');
+        
+        document.querySelectorAll('.ring-fill').forEach((g, i) => {
+          let dir = i % 2 === 0 ? 1 : -1;
+          g.style.animation = `spin ${2.5 + i*0.5}s linear infinite`;
+          g.style.animationDirection = dir === 1 ? 'normal' : 'reverse';
+          
+          let liquid = g.querySelector('.liquid-layer');
+          liquid.style.stroke = 'var(--success)';
+        });
+
+        document.querySelectorAll('.tube-liquid.filled').forEach((tube) => {
+          tube.style.stroke = 'var(--success)';
+        });
+
+        document.querySelectorAll('.rune-label.extracted').forEach(label => {
+          label.style.color = 'var(--success)';
+          label.style.textShadow = '0 0 15px var(--success)';
+        });
+        
+        logMsg("ACESSO CONCEDIDO.");
+        showModal("SISTEMA ESTABILIZADO.", "PORTAL ABERTO.", "success");
+      } else {
+        document.body.classList.add('shake');
+        setTimeout(() => document.body.classList.remove('shake'), 600);
+        
+        document.querySelectorAll('.liquid-layer.filled').forEach(ring => {
+          ring.classList.add('boil');
+        });
+
+        document.querySelectorAll('.tube-liquid.filled').forEach(tube => {
+          tube.classList.add('boil');
+        });
+        
+        logMsg("FALHA CRÍTICA DE ALINHAMENTO.");
+        showModal("FALHA DE FLUXO!", "MIASMA EXALADO.\n\nDANO NECRÓTICO.", "danger");
+      }
+    }
+
+    function disableButtons(state) {
+      document.querySelectorAll('button').forEach(b => {
+        if (b.id !== 'modal-close-btn') {
+          b.disabled = state;
+        }
+      });
+      if(state) document.getElementById('knob').style.pointerEvents = 'none';
+      else document.getElementById('knob').style.pointerEvents = 'auto';
+    }
+
+    function showModal(title, desc, type) {
+      const box = document.getElementById('modal-box');
+      box.className = type; 
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-desc').innerText = desc;
+      document.getElementById('modal-overlay').classList.add('visible');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('visible');
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
