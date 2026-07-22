@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>O SELO DA MANDÍBULA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Tubos Pneumáticos ao Fundo -->
+  <div id="tubes-container">
+    <svg id="tubes-svg" viewBox="0 0 2000 2000">
+      <g id="tubes-group"></g>
+    </svg>
+  </div>
+
+  <header>
+    <h1>O Selo da Mand&iacute;bula</h1>
+    <div class="system-log" id="log-out">&gt;&gt; SISTEMA INICIADO...</div>
+  </header>
+
+  <div class="astrolabe-wrapper">
+    <div id="labels-container"></div>
+    
+    <svg class="astrolabe-svg" viewBox="0 0 400 400">
+      <circle cx="200" cy="200" r="160" class="gear-teeth" stroke-dasharray="12 8" />
+      <circle cx="200" cy="200" r="125" class="gear-teeth" stroke-dasharray="10 8" />
+      <circle cx="200" cy="200" r="90" class="gear-teeth" stroke-dasharray="8 6" />
+      <circle cx="200" cy="200" r="55" class="gear-teeth" stroke-dasharray="6 6" />
+
+      <circle cx="200" cy="200" r="160" class="gear-base" />
+      <circle cx="200" cy="200" r="125" class="gear-base" />
+      <circle cx="200" cy="200" r="90" class="gear-base" />
+      <circle cx="200" cy="200" r="55" class="gear-base" />
+
+      <g opacity="0.6">
+        <circle cx="200" cy="200" r="160" class="slosh" />
+        <circle cx="200" cy="200" r="125" class="slosh" />
+        <circle cx="200" cy="200" r="90" class="slosh" />
+        <circle cx="200" cy="200" r="55" class="slosh" />
+      </g>
+
+      <!-- DUPLA CAMADA: liquid-glow (brilho) + liquid-core (fluido escuro no meio) -->
+      <g class="ring-fill" id="ring-group-0">
+        <circle cx="200" cy="200" r="55" class="liquid-glow" style="--circ: 346;" />
+        <circle cx="200" cy="200" r="55" class="liquid-core" style="--circ: 346;" />
+      </g>
+      <g class="ring-fill" id="ring-group-1">
+        <circle cx="200" cy="200" r="90" class="liquid-glow" style="--circ: 566;" />
+        <circle cx="200" cy="200" r="90" class="liquid-core" style="--circ: 566;" />
+      </g>
+      <g class="ring-fill" id="ring-group-2">
+        <circle cx="200" cy="200" r="125" class="liquid-glow" style="--circ: 786;" />
+        <circle cx="200" cy="200" r="125" class="liquid-core" style="--circ: 786;" />
+      </g>
+      <g class="ring-fill" id="ring-group-3">
+        <circle cx="200" cy="200" r="160" class="liquid-glow" style="--circ: 1006;" />
+        <circle cx="200" cy="200" r="160" class="liquid-core" style="--circ: 1006;" />
+      </g>
+
+      <g id="flow-rotator">
+        <line id="flow-line" x1="200" y1="200" x2="200" y2="20" class="flow-line" />
+      </g>
+
+      <g id="needle-group">
+        <path d="M196,200 L200,10 L204,200 L200,390 Z" fill="var(--iron)" stroke="#050505" stroke-width="1"/>
+        <circle cx="200" cy="200" r="15" fill="var(--iron)" stroke="#000" stroke-width="3"/>
+        <circle cx="200" cy="200" r="5" fill="var(--bone)" />
+      </g>
+    </svg>
+  </div>
+
+  <!-- PAINEL DE CONTROLE OTIMIZADO -->
+  <div class="dashboard-controls">
+    <div class="panel-section">
+      <button class="primary" id="btn-extract" onclick="extractRune()">EXTRAIR RUNA</button>
+      <button id="btn-resolve" onclick="resolveRoom()" style="color: #00d2ff; border-color: #005f77;">DESBRAVAR SALA</button>
+    </div>
+    
+    <div class="knob-wrapper">
+      <div id="knob" class="knob-dial">
+        <div class="knob-dot"></div>
+      </div>
+      <div class="knob-label">SINTONIZADOR</div>
+    </div>
+    
+    <div class="panel-section">
+      <button id="btn-undo" onclick="undoLast()">DESFAZER RUNA</button>
+      <button id="btn-clear" onclick="clearAll()">LIMPAR PAINEL</button>
+      <button class="danger" id="btn-inject" onclick="injectFlux()">INJETAR FLUXO</button>
+    </div>
+  </div>
+
+  <div id="modal-overlay">
+    <div id="modal-box">
+      <h2 id="modal-title"></h2>
+      <p id="modal-desc"></p>
+      <button id="modal-close-btn" onclick="closeModal()">[ RECONHECER ]</button>
+    </div>
+  </div>
+
+  <!-- Importa o Script Separado -->
+  <script src="script.js"></script>
+</body>
+</html>
