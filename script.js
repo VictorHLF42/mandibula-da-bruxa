@@ -2,6 +2,18 @@
 const SENHA_CORRETA = ["FOGO", "OSSO", "MEMÓRIA", "ESPELHO"];
 const labelsData = ["FOGO", "OSSO", "MEMÓRIA", "ESPELHO", "SANGUE", "CORVO", "LÁGRIMA", "SINO"];
 
+// 1. NOVA MATRIZ DE SALAS (O MAPA FIXO)
+const runeToRoom = {
+  "SINO": 1,
+  "MEMÓRIA": 2,
+  "LÁGRIMA": 3,
+  "FOGO": 4,
+  "ESPELHO": 5,
+  "SANGUE": 6,
+  "OSSO": 7,
+  "CORVO": 8
+};
+
 // Estado da Senha
 let sequencia = [];
 let cumulAngle = 0;
@@ -11,21 +23,19 @@ let locked = false;
 let sloshVal = 0;
 let isDraggingKnob = false;
 
-// === ESTADO DO LABIRINTO (ROTEAMENTO) ===
-// SINO é a Sala 1. Quando resolvida, abre (1+3)%8 e (1+5)%8 -> Salas 4 e 6.
-let salasResolvidas = new Set([1]); 
-let portasDisponiveis = new Set([4, 6]); 
+// Estado do Labirinto (Roteamento)
+// 1: SINO (Sempre inicia automaticamente)
+let salasDesbravadas = [1]; 
 
-// Funções Matemáticas do Labirinto
-function getRoomFromIndex(index) {
-  let n = (index + 2) % 8;
-  return n === 0 ? 8 : n;
-}
-
-function getIndexFromRoom(room) {
-  let idx = (room - 2) % 8;
-  if (idx < 0) idx += 8;
-  return idx;
+function getAvailableDoors() {
+  let lastRoom = salasDesbravadas[salasDesbravadas.length - 1];
+  let p1 = (lastRoom + 3) % 8 || 8;
+  let p2 = (lastRoom + 5) % 8 || 8;
+  
+  let available = new Set();
+  if (!salasDesbravadas.includes(p1)) available.add(p1);
+  if (!salasDesbravadas.includes(p2)) available.add(p2);
+  return available;
 }
 
 function init() {
@@ -85,9 +95,10 @@ function init() {
     tubesGroup.appendChild(liquidCore);
   }
 
-  updateMazeVisuals(); // Inicializa o feedback de cores do labirinto
+  updateMazeVisuals(); 
   updateNeedle();
   initKnob();
+  updateInjectButtonState();
 }
 
 function initKnob() {
@@ -142,50 +153,47 @@ function logMsg(msg) {
   document.getElementById('log-out').innerText = `>> ${msg}`;
 }
 
-// === Lógica de Exploração do Labirinto ===
+// === 2. LÓGICA DE NAVEGAÇÃO (+3 e +5) ===
 function resolveRoom() {
   if (locked || isAnimating) return;
   
-  let currentRoom = getRoomFromIndex(stepIndex);
+  let currentRune = labelsData[stepIndex];
+  let targetRoom = runeToRoom[currentRune];
   
-  if (!portasDisponiveis.has(currentRoom)) {
-    if (salasResolvidas.has(currentRoom)) {
-      logMsg("AVISO: SALA JÁ DESBRAVADA.");
-    } else {
-      logMsg("ACESSO BLOQUEADO: SALA INACESSÍVEL.");
-      document.body.classList.add('shake');
-      setTimeout(() => document.body.classList.remove('shake'), 600);
-    }
+  if (salasDesbravadas.includes(targetRoom)) {
+    logMsg("AVISO: SALA JÁ DESBRAVADA.");
+    return;
+  }
+  
+  let available = getAvailableDoors();
+  
+  if (!available.has(targetRoom)) {
+    logMsg("ACESSO BLOQUEADO: CAMINHO INACESSÍVEL DESTA SALA.");
+    document.body.classList.add('shake');
+    setTimeout(() => document.body.classList.remove('shake'), 600);
     return;
   }
   
   // Resolve a sala
-  portasDisponiveis.delete(currentRoom);
-  salasResolvidas.add(currentRoom);
-  
-  // Calcula as duas novas portas: +3 e +5
-  let newRoom1 = (currentRoom + 3) % 8;
-  if (newRoom1 === 0) newRoom1 = 8;
-  let newRoom2 = (currentRoom + 5) % 8;
-  if (newRoom2 === 0) newRoom2 = 8;
-  
-  if (!salasResolvidas.has(newRoom1)) portasDisponiveis.add(newRoom1);
-  if (!salasResolvidas.has(newRoom2)) portasDisponiveis.add(newRoom2);
-  
-  logMsg(`SALA ${currentRoom} (${labelsData[stepIndex]}) DESBRAVADA.`);
+  salasDesbravadas.push(targetRoom);
+  logMsg(`SALA ${targetRoom} (${currentRune}) DESBRAVADA.`);
   
   updateMazeVisuals();
 }
 
 function updateMazeVisuals() {
   const labels = document.querySelectorAll('.rune-label');
+  let available = getAvailableDoors();
+
   labels.forEach((el, idx) => {
-    let room = getRoomFromIndex(idx);
+    let runeName = labelsData[idx];
+    let room = runeToRoom[runeName];
+    
     el.classList.remove('disponivel', 'resolvida');
     
-    if (salasResolvidas.has(room)) {
+    if (salasDesbravadas.includes(room)) {
       el.classList.add('resolvida');
-    } else if (portasDisponiveis.has(room)) {
+    } else if (available.has(room)) {
       el.classList.add('disponivel');
     }
   });
@@ -211,6 +219,7 @@ function shiftSlosh(dir) {
   });
 }
 
+// === 3. EXTRAÇÃO LIVRE (MARGEM PARA ERRO) ===
 function extractRune() {
   if (locked || isAnimating) return;
   if (sequencia.length >= 4) {
@@ -218,8 +227,10 @@ function extractRune() {
     return;
   }
   
-  let currentRoom = getRoomFromIndex(stepIndex);
-  if (!salasResolvidas.has(currentRoom)) {
+  let currentRune = labelsData[stepIndex];
+  let currentRoom = runeToRoom[currentRune];
+  
+  if (!salasDesbravadas.includes(currentRoom)) {
     logMsg("ACESSO BLOQUEADO: RUNA NÃO ENERGIZADA NO LABIRINTO.");
     document.body.classList.add('shake');
     setTimeout(() => document.body.classList.remove('shake'), 600);
@@ -251,9 +262,10 @@ function extractRune() {
     let labelEl = document.querySelectorAll('.rune-label')[stepIndex];
     labelEl.classList.add('extracted');
     
-    sequencia.push(labelsData[stepIndex]);
-    logMsg(`RUNA EXTRAÍDA: ${labelsData[stepIndex]}`);
+    sequencia.push(currentRune);
+    logMsg(`RUNA EXTRAÍDA: ${currentRune}`);
     
+    updateInjectButtonState();
     isAnimating = false;
     disableButtons(false);
   }, 450); 
@@ -277,6 +289,7 @@ function undoLast() {
   let labelEl = document.querySelectorAll('.rune-label')[tubeIdx];
   labelEl.classList.remove('extracted');
   
+  updateInjectButtonState();
   logMsg("ÚLTIMA RUNA DESCARTADA.");
 }
 
@@ -287,6 +300,7 @@ function clearAll() {
   document.querySelectorAll('.liquid-glow, .liquid-core').forEach(ring => {
     ring.classList.remove('filled', 'boil');
     ring.style.stroke = '';
+    ring.style.filter = '';
   });
 
   document.querySelectorAll('.tube-liquid-glow, .tube-liquid-core').forEach(tube => {
@@ -300,15 +314,23 @@ function clearAll() {
     label.style.textShadow = '';
   });
 
-  updateMazeVisuals(); // Restaura as cores do labirinto em vez de ficar tudo branco
+  updateMazeVisuals(); 
+  updateInjectButtonState();
 
   logMsg("SISTEMA PURGADO (MANTIDO O MAPA).");
 }
 
+function updateInjectButtonState() {
+  const btnInject = document.getElementById('btn-inject');
+  if (btnInject) {
+    btnInject.disabled = (sequencia.length < 4);
+  }
+}
+
+// === 4. VALIDAÇÃO PUNITIVA NO CLÍMAX ===
 function injectFlux() {
   if (locked || isAnimating) return;
   if (sequencia.length < 4) {
-    logMsg("ERRO: 4 RUNAS NECESSÁRIAS PARA INJEÇÃO.");
     return;
   }
   
@@ -345,19 +367,53 @@ function injectFlux() {
     logMsg("ACESSO CONCEDIDO.");
     showModal("SISTEMA ESTABILIZADO.", "PORTAL ABERTO.", "success");
   } else {
+    // FALHA CRÍTICA (Erro)
+    locked = true;
+    disableButtons(true);
+    
     document.body.classList.add('shake');
     setTimeout(() => document.body.classList.remove('shake'), 600);
     
-    document.querySelectorAll('.liquid-glow.filled, .liquid-core.filled').forEach(ring => {
-      ring.classList.add('boil');
+    // O líquido preto das engrenagens pisca e muda para vermelho sangue
+    document.querySelectorAll('.liquid-core.filled, .tube-liquid-core.filled').forEach(el => {
+      el.style.stroke = '#8b0000';
+      el.style.filter = 'drop-shadow(0 0 10px #ff0000)';
+      el.classList.add('boil');
     });
 
-    document.querySelectorAll('.tube-liquid-glow.filled, .tube-liquid-core.filled').forEach(tube => {
-      tube.classList.add('boil');
+    document.querySelectorAll('.liquid-glow.filled, .tube-liquid-glow.filled').forEach(el => {
+      el.classList.add('boil');
     });
     
-    logMsg("FALHA CRÍTICA DE ALINHAMENTO.");
-    showModal("FALHA DE FLUXO!", "MIASMA EXALADO.\n\nDANO NECRÓTICO.", "danger");
+    logMsg("ASSINATURA INCOMPATÍVEL.");
+    showModal("ASSINATURA INCOMPATÍVEL.", "MIASMA LETAL LIBERADO.", "danger");
+
+    // Após 3 segundos de animação
+    setTimeout(() => {
+      sequencia = []; // Limpa apenas a tentativa de senha
+      
+      // Remove visualmente o preenchimento apenas dos anéis centrais e dos tubos que estavam preenchidos
+      document.querySelectorAll('.liquid-glow, .liquid-core').forEach(ring => {
+        ring.classList.remove('filled', 'boil');
+        ring.style.stroke = '';
+        ring.style.filter = '';
+      });
+
+      document.querySelectorAll('.tube-liquid-glow, .tube-liquid-core').forEach(tube => {
+        tube.classList.remove('filled', 'boil');
+        tube.style.stroke = '';
+      });
+
+      document.querySelectorAll('.rune-label.extracted').forEach(label => {
+        label.classList.remove('extracted');
+      });
+      
+      closeModal();
+      logMsg("TENTATIVA ZERADA. MAPA PRESERVADO.");
+      updateInjectButtonState();
+      locked = false;
+      disableButtons(false);
+    }, 3000);
   }
 }
 
@@ -367,8 +423,13 @@ function disableButtons(state) {
       b.disabled = state;
     }
   });
-  if(state) document.getElementById('knob').style.pointerEvents = 'none';
-  else document.getElementById('knob').style.pointerEvents = 'auto';
+  
+  if(state) {
+    document.getElementById('knob').style.pointerEvents = 'none';
+  } else {
+    document.getElementById('knob').style.pointerEvents = 'auto';
+    updateInjectButtonState(); // Restaura desativação condicional do botão de injetar
+  }
 }
 
 function showModal(title, desc, type) {
