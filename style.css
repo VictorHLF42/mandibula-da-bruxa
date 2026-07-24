@@ -55,6 +55,16 @@ h1 {
   margin: 0 auto 15px;
 }
 
+/* Container interno fixo em 600x600 que escala proporcionalmente ao wrapper */
+.astrolabe-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 600px;
+  height: 600px;
+  transform-origin: top left;
+}
+
 /* Fundo Pneumático */
 #tubes-container {
   position: absolute; 
@@ -504,26 +514,144 @@ button:disabled {
   white-space: pre-line;
 }
 
-/* Responsive Tablet/Mobile */
-@media (max-width: 768px) {
+/* ====================================
+   RESPONSIVIDADE — TABLET & MOBILE
+   ==================================== */
+
+/* === TABLET (até 900px) === */
+@media (max-width: 900px) {
+  body {
+    padding: 15px 10px;
+    justify-content: flex-start;
+    padding-top: 20px;
+  }
+
+  h1 {
+    font-size: clamp(1.6rem, 5vw, 2.2rem);
+  }
+
+  .system-log {
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+  }
+
   .astrolabe-wrapper {
-    transform: scale(0.65);
-    margin: -90px auto -60px;
+    width: min(90vw, 520px);
+    height: min(90vw, 520px);
   }
+
   .dashboard-controls {
-    flex-direction: row;
-    flex-wrap: wrap;
-    padding: 15px;
+    max-width: 95vw;
     gap: 15px;
+    padding: 12px 15px;
   }
-  .knob-wrapper {
-    order: -1; 
-    width: 100%; 
-    margin-bottom: 10px;
+
+  button {
+    font-size: 0.75rem;
+    padding: 10px 8px;
   }
-  .panel-section {
+
+  .rune-label {
+    font-size: 1.05rem;
+  }
+}
+
+/* === MOBILE (até 600px) === */
+@media (max-width: 600px) {
+  body {
+    padding: 10px 8px;
+    padding-top: 15px;
+  }
+
+  h1 {
+    font-size: clamp(1.3rem, 6vw, 1.8rem);
+  }
+
+  .system-log {
+    font-size: 0.65rem;
+    letter-spacing: 0.5px;
+  }
+
+  .astrolabe-wrapper {
+    width: min(92vw, 420px);
+    height: min(92vw, 420px);
+    margin: 0 auto 8px;
+  }
+
+  .dashboard-controls {
     flex-direction: column;
-    width: 45%;
+    align-items: stretch;
+    max-width: 95vw;
+    gap: 12px;
+    padding: 12px;
   }
-  h1 { font-size: 2.2rem; }
+
+  .dashboard-controls > .panel-section {
+    flex-direction: row;
+    justify-content: stretch;
+    gap: 8px;
+  }
+
+  .dashboard-controls > .panel-section button {
+    flex: 1;
+    font-size: 0.65rem;
+    padding: 10px 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .knob-wrapper {
+    order: -1;
+    align-self: center;
+  }
+
+  .knob-dial {
+    width: 75px;
+    height: 75px;
+  }
+
+  #modal-box {
+    padding: 20px 18px;
+    width: 95%;
+    max-width: 95vw;
+  }
+
+  #modal-title {
+    font-size: 1.3rem;
+  }
+
+  #modal-desc {
+    font-size: 0.85rem;
+  }
+
+  .rune-label {
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+  }
+}
+
+/* === MOBILE PEQUENO (até 380px) === */
+@media (max-width: 380px) {
+  h1 {
+    font-size: 1.2rem;
+  }
+
+  .astrolabe-wrapper {
+    width: 95vw;
+    height: 95vw;
+  }
+
+  .dashboard-controls > .panel-section button {
+    font-size: 0.58rem;
+    padding: 8px 2px;
+  }
+
+  .knob-dial {
+    width: 65px;
+    height: 65px;
+  }
+
+  .rune-label {
+    font-size: 0.72rem;
+    letter-spacing: 0;
+  }
 }

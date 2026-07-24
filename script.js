@@ -125,7 +125,18 @@ function init() {
   updateNeedle();
   initKnob();
   updateInjectButtonState();
+  scaleAstrolabe();
 }
+
+function scaleAstrolabe() {
+  const wrapper = document.querySelector('.astrolabe-wrapper');
+  const inner = document.getElementById('astrolabe-inner');
+  if (!wrapper || !inner) return;
+  const scale = wrapper.offsetWidth / 600;
+  inner.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('resize', scaleAstrolabe);
 
 function initKnob() {
   const knob = document.getElementById('knob');
