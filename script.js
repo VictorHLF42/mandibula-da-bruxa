@@ -2,17 +2,17 @@
 const SENHA_CORRETA = ["FOGO", "OSSO", "MEMÓRIA", "ESPELHO"];
 const labelsData = ["FOGO", "OSSO", "MEMÓRIA", "ESPELHO", "SANGUE", "CORVO", "LÁGRIMA", "SINO"];
 
-// 1. NOVA MATRIZ DE SALAS (O MAPA FIXO)
-const runeToRoom = {
-  "SINO": 1,
-  "MEMÓRIA": 2,
-  "LÁGRIMA": 3,
-  "FOGO": 4,
-  "ESPELHO": 5,
-  "SANGUE": 6,
-  "OSSO": 7,
-  "CORVO": 8
-};
+// Erros de Validação da Fechadura
+const ERROS_CRITICOS = [
+  {
+    titulo: "ACESSO NEGADO: CÓDIGO CORROMPIDO",
+    desc: "A ordem das engrenagens falhou na validação de segurança. Risco de fissura no núcleo.\nAcionando válvulas de descarte.\n\nALERTA DE TOXICIDADE: Inundação de Miasma no ambiente externo.\n\n[ -10 HP ]"
+  },
+  {
+    titulo: "FALHA DE CALIBRAÇÃO: VETOR REJEITADO",
+    desc: "Incompatibilidade no roteamento das runas. O motor do Astrolábio entrou em sobrecarga reativa.\nReset forçado dos cilindros de alinhamento.\n\nALERTA: Rompimento do selo de contenção. Descarga letal de gás ativada.\n\n[ -10 HP ]"
+  }
+];
 
 // Estado da Senha
 let sequencia = [];
@@ -22,20 +22,46 @@ let isAnimating = false;
 let locked = false;
 let sloshVal = 0;
 let isDraggingKnob = false;
+let needsResetOnClose = false;
 
 // Estado do Labirinto (Roteamento)
-// 1: SINO (Sempre inicia automaticamente)
-let salasDesbravadas = [1]; 
+// Começa totalmente apagado. Eles precisam alinhar no Sino (1) e desbravar.
+let salasDesbravadas = []; 
 
 function getAvailableDoors() {
-  let lastRoom = salasDesbravadas[salasDesbravadas.length - 1];
-  let p1 = (lastRoom + 3) % 8 || 8;
-  let p2 = (lastRoom + 5) % 8 || 8;
+  if (salasDesbravadas.length === 0) {
+    return new Set(["SINO"]); // Somente o SINO pode ser o ponto de partida
+  }
+  
+  let lastRune = salasDesbravadas[salasDesbravadas.length - 1];
+  let lastIndex = labelsData.indexOf(lastRune);
+  
+  let p1_index = (lastIndex + 2) % 8;
+  let p2_index = (lastIndex + 3) % 8;
   
   let available = new Set();
-  if (!salasDesbravadas.includes(p1)) available.add(p1);
-  if (!salasDesbravadas.includes(p2)) available.add(p2);
+  let r1 = labelsData[p1_index];
+  let r2 = labelsData[p2_index];
+  
+  if (!salasDesbravadas.includes(r1)) available.add(r1);
+  if (!salasDesbravadas.includes(r2)) available.add(r2);
+  
   return available;
+}
+
+// Retorna TODAS as rotas (+2 e +3) sem filtrar, para feedback visual completo
+function getAllDoors() {
+  if (salasDesbravadas.length === 0) {
+    return new Set(["SINO"]);
+  }
+  
+  let lastRune = salasDesbravadas[salasDesbravadas.length - 1];
+  let lastIndex = labelsData.indexOf(lastRune);
+  
+  let p1_index = (lastIndex + 2) % 8;
+  let p2_index = (lastIndex + 3) % 8;
+  
+  return new Set([labelsData[p1_index], labelsData[p2_index]]);
 }
 
 function init() {
@@ -158,43 +184,54 @@ function resolveRoom() {
   if (locked || isAnimating) return;
   
   let currentRune = labelsData[stepIndex];
-  let targetRoom = runeToRoom[currentRune];
+  let allDoors = getAllDoors();
   
-  if (salasDesbravadas.includes(targetRoom)) {
-    logMsg("AVISO: SALA JÁ DESBRAVADA.");
-    return;
-  }
-  
-  let available = getAvailableDoors();
-  
-  if (!available.has(targetRoom)) {
-    logMsg("ACESSO BLOQUEADO: CAMINHO INACESSÍVEL DESTA SALA.");
+  if (!allDoors.has(currentRune)) {
+    if (salasDesbravadas.length === 0) {
+      logMsg("ACESSO BLOQUEADO: É NECESSÁRIO UM PONTO DE ORIGEM (SINO).");
+    } else {
+      logMsg("ACESSO BLOQUEADO: ROTA INVIÁVEL. CONEXÃO INEXISTENTE.");
+    }
     document.body.classList.add('shake');
     setTimeout(() => document.body.classList.remove('shake'), 600);
     return;
   }
   
-  // Resolve a sala
-  salasDesbravadas.push(targetRoom);
-  logMsg(`SALA ${targetRoom} (${currentRune}) DESBRAVADA.`);
+  if (salasDesbravadas.length > 0 && salasDesbravadas.includes(currentRune)) {
+    if (salasDesbravadas[salasDesbravadas.length - 1] === currentRune) {
+      logMsg("AVISO: VOCÊ JÁ ESTÁ NESTA SALA.");
+      return;
+    }
+    salasDesbravadas.push(currentRune);
+    logMsg(`ROTA SEGUIDA PARA: ${currentRune}`);
+  } else {
+    // Resolve a sala nova
+    salasDesbravadas.push(currentRune);
+    logMsg(`SALA ${currentRune} DESBRAVADA.`);
+  }
   
   updateMazeVisuals();
 }
 
 function updateMazeVisuals() {
   const labels = document.querySelectorAll('.rune-label');
-  let available = getAvailableDoors();
+  let available = getAvailableDoors(); // Portas novas (azul)
+  let allDoors = getAllDoors();         // Todas as rotas +2/+3 (incluindo já exploradas)
 
   labels.forEach((el, idx) => {
     let runeName = labelsData[idx];
-    let room = runeToRoom[runeName];
     
-    el.classList.remove('disponivel', 'resolvida');
+    el.classList.remove('disponivel', 'resolvida', 'navegavel');
     
-    if (salasDesbravadas.includes(room)) {
-      el.classList.add('resolvida');
-    } else if (available.has(room)) {
+    if (available.has(runeName)) {
+      // Porta aberta para sala NOVA (azul pulsante)
       el.classList.add('disponivel');
+    } else if (allDoors.has(runeName) && salasDesbravadas.includes(runeName)) {
+      // Rota +2 ou +3 que leva a sala JÁ EXPLORADA (âmbar/dourado)
+      el.classList.add('navegavel');
+    } else if (salasDesbravadas.includes(runeName)) {
+      // Sala explorada que NÃO é rota atual (verde)
+      el.classList.add('resolvida');
     }
   });
 }
@@ -228,9 +265,8 @@ function extractRune() {
   }
   
   let currentRune = labelsData[stepIndex];
-  let currentRoom = runeToRoom[currentRune];
   
-  if (!salasDesbravadas.includes(currentRoom)) {
+  if (!salasDesbravadas.includes(currentRune)) {
     logMsg("ACESSO BLOQUEADO: RUNA NÃO ENERGIZADA NO LABIRINTO.");
     document.body.classList.add('shake');
     setTimeout(() => document.body.classList.remove('shake'), 600);
@@ -386,34 +422,9 @@ function injectFlux() {
     });
     
     logMsg("ASSINATURA INCOMPATÍVEL.");
-    showModal("ASSINATURA INCOMPATÍVEL.", "MIASMA LETAL LIBERADO.", "danger");
-
-    // Após 3 segundos de animação
-    setTimeout(() => {
-      sequencia = []; // Limpa apenas a tentativa de senha
-      
-      // Remove visualmente o preenchimento apenas dos anéis centrais e dos tubos que estavam preenchidos
-      document.querySelectorAll('.liquid-glow, .liquid-core').forEach(ring => {
-        ring.classList.remove('filled', 'boil');
-        ring.style.stroke = '';
-        ring.style.filter = '';
-      });
-
-      document.querySelectorAll('.tube-liquid-glow, .tube-liquid-core').forEach(tube => {
-        tube.classList.remove('filled', 'boil');
-        tube.style.stroke = '';
-      });
-
-      document.querySelectorAll('.rune-label.extracted').forEach(label => {
-        label.classList.remove('extracted');
-      });
-      
-      closeModal();
-      logMsg("TENTATIVA ZERADA. MAPA PRESERVADO.");
-      updateInjectButtonState();
-      locked = false;
-      disableButtons(false);
-    }, 3000);
+    let erroSorteado = ERROS_CRITICOS[Math.floor(Math.random() * ERROS_CRITICOS.length)];
+    showModal(erroSorteado.titulo, erroSorteado.desc, "danger");
+    needsResetOnClose = true;
   }
 }
 
@@ -442,6 +453,34 @@ function showModal(title, desc, type) {
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('visible');
+  
+  if (needsResetOnClose) {
+    sequencia = []; 
+    salasDesbravadas = []; 
+    
+    document.querySelectorAll('.liquid-glow, .liquid-core').forEach(ring => {
+      ring.classList.remove('filled', 'boil');
+      ring.style.stroke = '';
+      ring.style.filter = '';
+    });
+
+    document.querySelectorAll('.tube-liquid-glow, .tube-liquid-core').forEach(tube => {
+      tube.classList.remove('filled', 'boil');
+      tube.style.stroke = '';
+    });
+
+    document.querySelectorAll('.rune-label.extracted').forEach(label => {
+      label.classList.remove('extracted');
+    });
+    
+    updateMazeVisuals(); 
+    logMsg("TENTATIVA ZERADA. LABIRINTO RESETADO.");
+    updateInjectButtonState();
+    locked = false;
+    disableButtons(false);
+    
+    needsResetOnClose = false;
+  }
 }
 
 window.onload = init;

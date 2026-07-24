@@ -144,11 +144,14 @@ h1 {
 }
 
 /* === Lógica Visual do Labirinto === */
+
+/* DESBRAVADA: Verde esmeralda — "Conquistada, já passei aqui" */
 .rune-label.resolvida {
-  color: #3e3730 !important; /* Muito escura, sala vazia */
-  text-shadow: none !important;
+  color: #2ecc71 !important;
+  text-shadow: 0 0 8px rgba(46, 204, 113, 0.6), 0 0 18px rgba(46, 204, 113, 0.3) !important;
 }
 
+/* DISPONÍVEL: Azul ciano pulsando — "Porta aberta, posso ir pra cá" */
 .rune-label.disponivel {
   color: #00d2ff;
   text-shadow: 0 0 10px #00d2ff, 0 0 20px #00d2ff;
@@ -160,7 +163,21 @@ h1 {
   100% { text-shadow: 0 0 15px #00d2ff, 0 0 30px #00d2ff; color: #ffffff; }
 }
 
+/* NAVEGÁVEL: Âmbar/Dourado — "Rota +2 ou +3 que leva a sala já explorada" */
+.rune-label.navegavel {
+  color: #f0a500 !important;
+  text-shadow: 0 0 8px rgba(240, 165, 0, 0.6), 0 0 18px rgba(240, 165, 0, 0.3) !important;
+  animation: pulse-navegavel 2s infinite alternate;
+}
+
+@keyframes pulse-navegavel {
+  0% { text-shadow: 0 0 5px rgba(240, 165, 0, 0.4), 0 0 10px rgba(240, 165, 0, 0.2); color: #f0a500; }
+  100% { text-shadow: 0 0 12px rgba(240, 165, 0, 0.7), 0 0 22px rgba(240, 165, 0, 0.4); color: #ffd966; }
+}
+
 /* === Feedback da Agulha sobre Rótulo === */
+
+/* ACTIVE (genérico): Roxo neon — "Agulha apontando para esta runa" */
 .rune-label.active {
   color: var(--miasma-light);
   text-shadow: 0 0 10px var(--miasma), 0 0 20px var(--miasma);
@@ -168,13 +185,30 @@ h1 {
   z-index: 5;
 }
 
+/* ACTIVE + DISPONÍVEL: Azul intenso e grande — "Agulha em cima de uma porta aberta!" */
 .rune-label.disponivel.active {
-  transform: translate(-50%, -50%) scale(1.15);
+  transform: translate(-50%, -50%) scale(1.25);
   color: #ffffff;
   text-shadow: 0 0 15px #00d2ff, 0 0 30px #00d2ff, 0 0 45px #00d2ff;
   animation: none;
 }
 
+/* ACTIVE + RESOLVIDA: Verde forte e grande — "Agulha em cima de sala já conquistada" */
+.rune-label.resolvida.active {
+  transform: translate(-50%, -50%) scale(1.15);
+  color: #5dfa8f !important;
+  text-shadow: 0 0 12px rgba(46, 204, 113, 0.8), 0 0 25px rgba(46, 204, 113, 0.5) !important;
+}
+
+/* ACTIVE + NAVEGÁVEL: Dourado forte e grande — "Agulha em cima de rota navegável" */
+.rune-label.navegavel.active {
+  transform: translate(-50%, -50%) scale(1.25);
+  color: #ffd966 !important;
+  text-shadow: 0 0 15px rgba(240, 165, 0, 0.9), 0 0 30px rgba(240, 165, 0, 0.5) !important;
+  animation: none;
+}
+
+/* EXTRAÍDA: Roxo miasma — "Runa já foi sugada pro anel central" */
 .rune-label.extracted {
   color: var(--miasma-light);
   text-shadow: 0 0 15px var(--miasma);
@@ -467,6 +501,7 @@ button:disabled {
   margin-bottom: 25px;
   color: var(--bone);
   line-height: 1.5;
+  white-space: pre-line;
 }
 
 /* Responsive Tablet/Mobile */
