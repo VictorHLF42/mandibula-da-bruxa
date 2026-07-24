@@ -400,8 +400,12 @@ function injectFlux() {
       label.style.textShadow = '0 0 15px var(--success) !important';
     });
     
-    logMsg("ACESSO CONCEDIDO.");
-    showModal("SISTEMA ESTABILIZADO.", "PORTAL ABERTO.", "success");
+    logMsg("ACESSO CONCEDIDO: PARABÉNS JOGADORES, PORTAS ABERTAS.");
+    showModal(
+      "SISTEMA ESTABILIZADO", 
+      "A ressonância atingiu a harmonia perfeita. As travas ancestrais foram rompidas.\n\nPARABÉNS, JOGADORES.\nAS PORTAS ESTÃO ABERTAS.", 
+      "success"
+    );
   } else {
     // FALHA CRÍTICA (Erro)
     locked = true;
