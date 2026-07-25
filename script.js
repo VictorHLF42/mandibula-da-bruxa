@@ -126,6 +126,7 @@ function init() {
   initKnob();
   updateInjectButtonState();
   scaleAstrolabe();
+  initPlantaNegra();
 }
 
 function scaleAstrolabe() {
@@ -496,6 +497,72 @@ function closeModal() {
     
     needsResetOnClose = false;
   }
+}
+
+// =============================================
+// EASTER EGG: OVERRIDE DA PLANTA NEGRA
+// =============================================
+
+function initPlantaNegra() {
+  const title = document.querySelector('h1');
+  if (!title) return;
+
+  let clickCount = 0;
+  let resetTimer = null;
+  const REQUIRED_CLICKS = 5;
+  const RESET_DELAY = 2000; // reseta se parar de clicar por 2s
+
+  title.addEventListener('click', () => {
+    clickCount++;
+
+    // Feedback visual sutil a cada clique: leve flash verde no título
+    title.style.transition = 'color 0.1s';
+    title.style.color = `hsl(120, ${clickCount * 18}%, ${70 - clickCount * 5}%)`;
+    setTimeout(() => {
+      if (clickCount < REQUIRED_CLICKS) {
+        title.style.color = '';
+      }
+    }, 150);
+
+    // Reseta o timer de inatividade
+    if (resetTimer) clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => {
+      clickCount = 0;
+      title.style.color = '';
+    }, RESET_DELAY);
+
+    if (clickCount >= REQUIRED_CLICKS) {
+      clickCount = 0;
+      if (resetTimer) clearTimeout(resetTimer);
+      title.style.color = '';
+      activateOverride();
+    }
+  });
+}
+
+function activateOverride() {
+  // 1. Efeito de glitch visual em toda a tela
+  document.body.classList.add('glitch-active');
+  setTimeout(() => document.body.classList.remove('glitch-active'), 1200);
+
+  // 2. Após o glitch, desbloqueia todas as salas
+  setTimeout(() => {
+    salasDesbravadas = [...labelsData]; // Todas as runas desbravadas
+    updateMazeVisuals();
+    logMsg("OVERRIDE ATIVO: LABIRINTO CORROMPIDO PELA PLANTA NEGRA.");
+    document.body.classList.remove('symbiosis-active');
+    document.body.classList.add('override-active');
+
+    // 3. Abre o modal do terminal
+    document.getElementById('override-overlay').classList.add('visible');
+  }, 900);
+}
+
+function closeOverride() {
+  document.getElementById('override-overlay').classList.remove('visible');
+  document.body.classList.remove('override-active');
+  document.body.classList.add('symbiosis-active');
+  logMsg("SIMBIOSE RECONHECIDA. MECANISMO E TUBOS INTEGRADOS À PLANTA NEGRA.");
 }
 
 window.onload = init;

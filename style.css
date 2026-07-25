@@ -30,7 +30,7 @@ body {
   position: relative;
 }
 
-header { margin-bottom: 10px; z-index: 10; }
+header { margin-bottom: 10px; z-index: 10; position: relative; }
 h1 {
   font-family: var(--font-title);
   font-size: 2.5rem;
@@ -321,6 +321,141 @@ h1 {
   transform-origin: 200px 200px;
 }
 
+/* === WRAPPER DO PAINEL + RAÍZES DA PLANTA NEGRA === */
+.dashboard-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 650px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* SVG das raízes no painel: ESCONDIDO por padrão, aparece só com override */
+.roots-svg {
+  width: 100%;
+  max-width: 650px;
+  height: auto;
+  display: block;
+  overflow: visible;
+  margin-bottom: -2px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+/* Raiz base */
+.root {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.r-thick { stroke: #1f081c; stroke-width: 1.2; opacity: 0.88; }
+.r-mid   { stroke: #180515; stroke-width: 0.7;  opacity: 0.75; }
+.r-thin  { stroke: #120310; stroke-width: 0.4;  opacity: 0.62; }
+.r-twig  { stroke: #0c020a; stroke-width: 0.22; opacity: 0.5;  }
+
+.root-node      { fill: #2a081e; opacity: 0.85; }
+.petal          { fill: #08050a; opacity: 0.95; }
+.blossom-center { fill: #4a0518; opacity: 0.9; }
+
+/* keyframes simplificados sem filter (filter em SVG é muito pesado) */
+@keyframes root-breathe {
+  0%   { opacity: 0.5; }
+  100% { opacity: 0.9; }
+}
+
+@keyframes node-pulse {
+  0%   { fill: #200515; }
+  100% { fill: #400a28; }
+}
+
+@keyframes petal-bloom {
+  0%   { fill: #050308; opacity: 0.8; }
+  100% { fill: #120818; opacity: 0.95; }
+}
+
+/* === OVERRIDE ATIVO: A PRAGA ASSUME O SISTEMA (Rot & Crimson Glow) === */
+body.override-active #full-roots-svg,
+body.override-active .roots-svg {
+  opacity: 1;
+}
+
+/* Forçar visibilidade dos paths individualmente no override */
+body.override-active .r-thick,
+body.override-active .r-mid,
+body.override-active .r-thin,
+body.override-active .r-twig {
+  opacity: 1 !important;
+}
+
+body.override-active .root {
+  stroke: #7a0d30 !important;
+  animation: root-plague 5s ease-in-out infinite alternate !important;
+}
+body.override-active .root-node,
+body.override-active .blossom-center {
+  fill: #cc1144 !important;
+  opacity: 1 !important;
+  animation: node-plague 4s ease-in-out infinite alternate !important;
+}
+body.override-active .petal {
+  fill: #0d0812 !important;
+  opacity: 1 !important;
+  animation: petal-plague 6s ease-in-out infinite alternate !important;
+}
+
+@keyframes root-plague {
+  0%   { stroke: #380616; opacity: 0.75; }
+  100% { stroke: #991540; opacity: 1; }
+}
+@keyframes node-plague {
+  0%   { fill: #55081c; }
+  100% { fill: #ff1a50; }
+}
+@keyframes petal-plague {
+  0%   { fill: #08050c; opacity: 0.85; }
+  100% { fill: #180d22; opacity: 1; }
+}
+
+/* === SIMBIOSE ATIVA (Pós-Override): Praga sombria e permanente no mecanismo e tubos === */
+body.symbiosis-active #full-roots-svg,
+body.symbiosis-active .roots-svg {
+  opacity: 1;
+}
+
+body.symbiosis-active .r-thick,
+body.symbiosis-active .r-mid,
+body.symbiosis-active .r-thin,
+body.symbiosis-active .r-twig {
+  opacity: 1 !important;
+}
+
+body.symbiosis-active .root {
+  stroke: #4a0a25 !important;
+  animation: root-symbiosis-pulse 8s ease-in-out infinite alternate !important;
+}
+body.symbiosis-active .root-node,
+body.symbiosis-active .blossom-center {
+  fill: #881133 !important;
+  opacity: 1 !important;
+  animation: node-symbiosis-pulse 6s ease-in-out infinite alternate !important;
+}
+body.symbiosis-active .petal {
+  fill: #0a060e !important;
+  opacity: 1 !important;
+}
+
+@keyframes root-symbiosis-pulse {
+  0%   { stroke: #200410; opacity: 0.75; }
+  100% { stroke: #5e0d30; opacity: 0.95; }
+}
+@keyframes node-symbiosis-pulse {
+  0%   { fill: #4a081b; }
+  100% { fill: #aa1540; }
+}
+
 /* === O PAINEL DE CONTROLE (KNOB) === */
 .dashboard-controls {
   display: flex;
@@ -515,6 +650,170 @@ button:disabled {
 }
 
 /* ====================================
+   EASTER EGG — PLANTA NEGRA OVERRIDE
+   ==================================== */
+
+/* SVG FULL-SCREEN: raízes só aparecem quando override é ativado */
+#full-roots-svg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  overflow: visible;
+  /* ESCONDIDO por padrão — só aparece com a Planta Negra */
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out;
+}
+
+/* A Mancha: visível apenas se você souber procurar */
+#planta-negra-trigger {
+  position: absolute;
+  bottom: 62px;
+  left: 58px;
+  width: 28px;
+  height: 18px;
+  border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
+  background: radial-gradient(ellipse at 40% 60%, #0a1a05 0%, #050d02 60%, transparent 100%);
+  opacity: 0.55;
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  z-index: 20;
+  transition: opacity 0.4s;
+  /* Sem border, sem box-shadow — não pode parecer um botão */
+}
+
+#planta-negra-trigger:hover {
+  opacity: 0.7; /* levíssimo hover, quase imperceptível */
+}
+
+/* Barra de progresso do long-press (invisível até iniciar) */
+#planta-negra-trigger::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0%;
+  height: 2px;
+  background: #1a4a05;
+  border-radius: 2px;
+  transition: width linear;
+}
+
+#planta-negra-trigger.pressing::after {
+  width: 100%;
+  transition: width 3s linear;
+}
+
+/* Glitch: tela perde saturação e treme */
+@keyframes glitch-desaturate {
+  0%   { filter: saturate(1) brightness(1); }
+  15%  { filter: saturate(0) brightness(0.7) hue-rotate(90deg); }
+  30%  { filter: saturate(0.2) brightness(1.2); transform: translate(-3px, 1px); }
+  45%  { filter: saturate(0) brightness(0.5); transform: translate(3px, -2px); }
+  60%  { filter: saturate(0.1) brightness(1.1) hue-rotate(-30deg); transform: translate(-1px, 0); }
+  80%  { filter: saturate(0.4) brightness(0.9); transform: translate(0, 0); }
+  100% { filter: saturate(1) brightness(1); transform: translate(0, 0); }
+}
+
+.glitch-active {
+  animation: glitch-desaturate 1.2s ease-in-out forwards;
+}
+
+/* === OVERRIDE MODAL — TERMINAL DA PLANTA NEGRA === */
+#override-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 5, 0, 0.93);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+
+#override-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#override-box {
+  background: #020802;
+  border: 1px solid #1a4a05;
+  box-shadow: 0 0 40px rgba(0, 80, 0, 0.4), inset 0 0 20px rgba(0, 20, 0, 0.8);
+  padding: 28px 32px;
+  max-width: 560px;
+  width: 93%;
+  text-align: left;
+}
+
+#override-terminal {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin-bottom: 24px;
+  max-height: 65vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #1a4a05 #020802;
+}
+
+.term-line {
+  color: #c8d8c0;
+  display: block;
+}
+
+.term-line.dim {
+  color: #6a8a62;
+}
+
+.term-line.alert {
+  color: #e8e8e8;
+  font-weight: bold;
+  text-shadow: 0 0 8px rgba(200, 255, 180, 0.4);
+}
+
+.term-line.warn {
+  color: #a0b890;
+  font-style: italic;
+}
+
+.term-fail {
+  color: #ff4444;
+  font-weight: bold;
+}
+
+.term-ok {
+  color: #44ff88;
+  font-weight: bold;
+}
+
+#override-close-btn {
+  background: #021002;
+  border: 1px solid #2a6a10;
+  color: #44ff88;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  padding: 10px 20px;
+  cursor: pointer;
+  letter-spacing: 2px;
+  width: 100%;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+#override-close-btn:hover {
+  background: #031a03;
+  border-color: #44ff88;
+  box-shadow: 0 0 12px rgba(68, 255, 136, 0.2);
+}
+
+
+/* ====================================
    RESPONSIVIDADE — TABLET & MOBILE
    ==================================== */
 
@@ -544,6 +843,14 @@ button:disabled {
     max-width: 95vw;
     gap: 15px;
     padding: 12px 15px;
+  }
+
+  .dashboard-wrapper {
+    max-width: 95vw;
+  }
+
+  .roots-svg {
+    max-width: 95vw;
   }
 
   button {
@@ -584,6 +891,16 @@ button:disabled {
     max-width: 95vw;
     gap: 12px;
     padding: 12px;
+  }
+
+  .dashboard-wrapper {
+    max-width: 95vw;
+  }
+
+  .roots-svg {
+    max-width: 95vw;
+    /* Simplifica as raízes no mobile: menos altura para não dominar a tela */
+    max-height: 70px;
   }
 
   .dashboard-controls > .panel-section {
